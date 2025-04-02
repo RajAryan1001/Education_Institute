@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Verify OTP</title>
+  <style>
+    body { font-family: Arial; max-width: 300px; margin: 50px auto; }
+    input, button { padding: 10px; width: 100%; margin: 10px 0; }
+    button { background: #28a745; color: white; border: none; }
+  </style>
+</head>
+<body>
+  <h2>Verify OTP</h2>
+  <form action="/verify" method="POST">
+    <input 
+      type="tel" 
+      name="otp" 
+      placeholder="Enter 4-digit OTP" 
+      pattern="[0-9]{4}" 
+      required
+    >
+    <button type="submit">Verify</button>
+  </form>
+  <p>Check console for OTP</p>
+</body>
+</html>

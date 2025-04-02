@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechGenius - Software Coaching Institute</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/Home.css"> 
+    <link rel="stylesheet" href="../css/Admission.css">      
+    <link rel="stylesheet" href="../css/Contact&About.css">   
+
+</head>
+<body>
+    <!-- Header -->
+    
+    <%- include('partials/header') %>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>About TechGenius</h1>
+            <div class="breadcrumb">
+                <a href="index.html">Home</a>
+                <span>/</span>
+                <span>About Us</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="page-container">
+        <div class="main-content">
+            <div class="content-wrapper">
+                <!-- Left Content -->
+                <div class="content-left">
+                    <!-- About Us Section -->
+                    <div class="content-section">
+                        <h2>Our Story</h2>
+                        <p>Founded in 2010, TechGenius has been at the forefront of software education for over a decade. What started as a small coaching center with just 5 students has now grown into one of the most respected software training institutes in the country with over 10,000 successful alumni working in top tech companies worldwide.</p>
+                        
+                        <div class="about-stats">
+                            <div class="stat-item">
+                                <span class="stat-number">10+</span>
+                                <span class="stat-text">Years of Excellence</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">15,000+</span>
+                                <span class="stat-text">Students Trained</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">98%</span>
+                                <span class="stat-text">Placement Rate</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">50+</span>
+                                <span class="stat-text">Expert Instructors</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mission & Vision -->
+                    <div class="content-section">
+                        <h2>Our Mission & Vision</h2>
+                        <div class="mission-vision">
+                            <div class="mission-box">
+                                <h3><i class="fas fa-bullseye"></i> Our Mission</h3>
+                                <p>To empower individuals with cutting-edge technical skills and knowledge that enable them to excel in the ever-evolving software industry and contribute meaningfully to technological advancement.</p>
+                            </div>
+                            <div class="vision-box">
+                                <h3><i class="fas fa-eye"></i> Our Vision</h3>
+                                <p>To be the global leader in software education, recognized for excellence, innovation, and producing industry-ready professionals who drive technological transformation worldwide.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Our Team -->
+                    <div class="content-section">
+                        <h2>Meet Our Expert Team</h2>
+                        <p>Our instructors are industry veterans with years of practical experience in leading tech companies.</p>
+                        
+                        <div class="team-grid">
+                            <div class="team-member">
+                                <div class="member-img">
+                                    <img src="https://source.unsplash.com/300x300/?portrait,man" alt="John Doe">
+                                </div>
+                                <h4>John Doe</h4>
+                                <p class="member-role">Founder & Lead Instructor</p>
+                                <p class="member-bio">Ex-Google developer with 15+ years of experience in software architecture.</p>
+                                <div class="social-links">
+                                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                                    <a href="#"><i class="fab fa-twitter"></i></a>
+                                </div>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-img">
+                                    <img src="https://source.unsplash.com/300x300/?portrait,woman" alt="Jane Smith">
+                                </div>
+                                <h4>Jane Smith</h4>
+                                <p class="member-role">Senior Instructor - Web Development</p>
+                                <p class="member-bio">Full-stack developer with expertise in React, Node.js, and cloud technologies.</p>
+                                <div class="social-links">
+                                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                                    <a href="#"><i class="fab fa-github"></i></a>
+                                </div>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-img">
+                                    <img src="https://source.unsplash.com/300x300/?portrait,man,indian" alt="Raj Patel">
+                                </div>
+                                <h4>Raj Patel</h4>
+                                <p class="member-role">Senior Instructor - Mobile Development</p>
+                                <p class="member-bio">Mobile app specialist with experience in iOS, Android, and cross-platform frameworks.</p>
+                                <div class="social-links">
+                                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                                    <a href="#"><i class="fab fa-github"></i></a>
+                                </div>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-img">
+                                    <img src="https://source.unsplash.com/300x300/?portrait,woman,asian" alt="Lisa Chen">
+                                </div>
+                                <h4>Lisa Chen</h4>
+                                <p class="member-role">Senior Instructor - Data Science</p>
+                                <p class="member-bio">Data scientist with background in AI, machine learning, and big data analytics.</p>
+                                <div class="social-links">
+                                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                                    <a href="#"><i class="fab fa-medium"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Our Facilities -->
+                    <div class="content-section">
+                        <h2>State-of-the-Art Facilities</h2>
+                        <div class="facilities-grid">
+                            <div class="facility-item">
+                                <i class="fas fa-laptop-code"></i>
+                                <h4>Modern Computer Labs</h4>
+                                <p>High-performance workstations with the latest software and development tools.</p>
+                            </div>
+                            <div class="facility-item">
+                                <i class="fas fa-wifi"></i>
+                                <h4>High-Speed Internet</h4>
+                                <p>Gigabit fiber connection for seamless learning and development.</p>
+                            </div>
+                            <div class="facility-item">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <h4>Smart Classrooms</h4>
+                                <p>Interactive teaching environments with modern audio-visual equipment.</p>
+                            </div>
+                            <div class="facility-item">
+                                <i class="fas fa-book"></i>
+                                <h4>Digital Library</h4>
+                                <p>Access to thousands of e-books, tutorials, and research papers.</p>
+                            </div>
+                            <div class="facility-item">
+                                <i class="fas fa-coffee"></i>
+                                <h4>Student Lounge</h4>
+                                <p>Comfortable spaces for relaxation, collaboration, and networking.</p>
+                            </div>
+                            <div class="facility-item">
+                                <i class="fas fa-project-diagram"></i>
+                                <h4>Project Rooms</h4>
+                                <p>Dedicated spaces for team projects and collaborative work.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Testimonials -->
+                    <div class="content-section">
+                        <h2>What Our Students Say</h2>
+                        <div class="testimonials-container">
+                            <div class="testimonial-slider">
+                                <div class="testimonial-slide active">
+                                    <div class="testimonial">
+                                        <div class="quote"><i class="fas fa-quote-left"></i></div>
+                                        <p>TechGenius completely transformed my career. The hands-on training and industry-focused curriculum helped me land a job at a top tech company within a month of completing my course.</p>
+                                        <div class="testimonial-author">
+                                            <img src="https://source.unsplash.com/100x100/?portrait" alt="Michael Johnson">
+                                            <div>
+                                                <h5>Michael Johnson</h5>
+                                                <p>Software Developer at Amazon</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="testimonial-slide">
+                                    <div class="testimonial">
+                                        <div class="quote"><i class="fas fa-quote-left"></i></div>
+                                        <p>The instructors at TechGenius are exceptional. They don't just teach you to code; they mentor you to think like a professional developer and solve real-world problems.</p>
+                                        <div class="testimonial-author">
+                                            <img src="https://source.unsplash.com/100x100/?woman,portrait" alt="Sarah Williams">
+                                            <div>
+                                                <h5>Sarah Williams</h5>
+                                                <p>Frontend Developer at Microsoft</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="testimonial-slide">
+                                    <div class="testimonial">
+                                        <div class="quote"><i class="fas fa-quote-left"></i></div>
+                                        <p>As someone who switched careers from marketing to web development, I found TechGenius's approach perfect for beginners. The step-by-step learning path made the transition smooth and enjoyable.</p>
+                                        <div class="testimonial-author">
+                                            <img src="https://source.unsplash.com/100x100/?man,portrait" alt="David Lee">
+                                            <div>
+                                                <h5>David Lee</h5>
+                                                <p>Full Stack Developer at Shopify</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="testimonial-controls">
+                                <button class="prev-testimonial"><i class="fas fa-chevron-left"></i></button>
+                                <div class="testimonial-dots">
+                                    <span class="dot active" data-slide="0"></span>
+                                    <span class="dot" data-slide="1"></span>
+                                    <span class="dot" data-slide="2"></span>
+                                </div>
+                                <button class="next-testimonial"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ Section -->
+                    <div class="content-section">
+                        <h2>Frequently Asked Questions</h2>
+                        <div class="faq-container">
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <h4>What qualifications do I need to enroll in your courses?</h4>
+                                    <span class="faq-toggle"><i class="fas fa-plus"></i></span>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>Most of our courses are designed for students with a basic understanding of computers. Some advanced courses may require prior programming knowledge or specific educational backgrounds. Each course page lists the specific prerequisites needed.</p>
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <h4>Do you offer job placement assistance?</h4>
+                                    <span class="faq-toggle"><i class="fas fa-plus"></i></span>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>Yes, we have a dedicated placement cell that works with over 200+ hiring partners. We provide resume building, interview preparation, and direct placement opportunities. Our placement rate is consistently above 95% for students who complete our career-track programs.</p>
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <h4>What is the duration of your courses?</h4>
+                                    <span class="faq-toggle"><i class="fas fa-plus"></i></span>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>Course durations vary from 2 weeks to 6 months depending on the program. Our short courses typically run for 2-4 weeks, while comprehensive career tracks run for 3-6 months. We also offer flexible timing options including weekday, weekend, and evening batches.</p>
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <h4>Do you offer online courses?</h4>
+                                    <span class="faq-toggle"><i class="fas fa-plus"></i></span>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>Yes, all our courses are available in both online and offline formats. Our online courses feature live interactive sessions, not pre-recorded videos, ensuring you get the same quality of education as our in-person classes. You can also access recordings of sessions for revision.</p>
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <h4>Are there any scholarships or financial aid options available?</h4>
+                                    <span class="faq-toggle"><i class="fas fa-plus"></i></span>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>We offer merit-based scholarships for outstanding students and need-based financial aid. We also have flexible payment plans and income share agreements for select programs where you can pay after getting a job. Contact our admissions team for more details.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar -->
+                <div class="content-right" style=" position: relative;
+                top: 0rem;
+                height: fit-content;
+                width: 100%;
+                align-self: start;">
+                    <div class="enquiry-form">
+                        <h3>Request Information</h3>
+                        <p>Fill out the form below and our team will get back to you within 24 hours.</p>
+                        <form id="course-enquiry-form" action="/submit-course-enquiry" method="POST">
+                            <div class="form-group">
+                                <input type="text" id="name" name="fullName" placeholder=" ">
+                                <label for="name">Full Name</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" id="email" name="email" placeholder=" ">
+                                <label for="email">Email Address</label>
+                            </div>
+                            <div class="form-group phone-group">
+                                <span class="phone-prefix">+91</span>
+                                <input type="tel" id="phone" name="phone" placeholder=" ">
+                                <label for="phone">Phone Number</label>
+                            </div>
+                            <div class="form-group">
+                                <select id="course-interest" name="courseInterest">
+                                    <option value=""></option>
+                                    <option value="GRE">GRE</option>
+                                    <option value="GMAT">GMAT</option>
+                                    <option value="SAT">SAT</option>
+                                    <option value="IELTS">IELTS</option>
+                                    <option value="TOEFL">TOEFL</option>
+                                    <option value="PTE">PTE</option>
+                                    <option value="ACT">ACT</option>
+                                    <option value="AP">AP</option>
+                                    <option value="CBSE">CBSE</option>
+                                </select>
+                                <label for="course-interest">Course Interest</label>
+                            </div>
+                            <div class="form-group">
+                                <select id="preferred-mode" name="preferredMode">
+                                    <option value=""></option>
+                                    <option value="online">Online</option>
+                                    <option value="offline">Offline (In-Campus)</option>
+                                    <option value="hybrid">Hybrid</option>
+                                </select>
+                                <label for="preferred-mode">Preferred Mode</label>
+                            </div>
+                            <button type="submit" class="submit-btn">Request Information</button>
+                        </form>
+                    </div>
+
+                    <div class="contact-info-sidebar">
+                        <h3>Contact Information</h3>
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>
+                                <h4>Main Campus</h4>
+                                <p>123 Tech Park, Silicon Valley Road, Bangalore - 560001</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone-alt"></i>
+                            <div>
+                                <h4>Call Us</h4>
+                                <p>+91 9876543210</p>
+                                <p>+91 8765432109</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <h4>Email Us</h4>
+                                <p>admissions@techgenius.edu</p>
+                                <p>info@techgenius.edu</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <h4>Office Hours</h4>
+                                <p>Monday - Saturday: 9:00 AM - 6:00 PM</p>
+                                <p>Sunday: Closed</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="upcoming-events">
+                        <h3>Upcoming Events</h3>
+                        <div class="event-item">
+                            <div class="event-date">
+                                <span class="day">15</span>
+                                <span class="month">Mar</span>
+                            </div>
+                            <div class="event-details">
+                                <h4>Web Development Workshop</h4>
+                                <p><i class="fas fa-clock"></i> 10:00 AM - 1:00 PM</p>
+                                <p><i class="fas fa-map-marker-alt"></i> Main Campus</p>
+                            </div>
+                        </div>
+                        <div class="event-item">
+                            <div class="event-date">
+                                <span class="day">22</span>
+                                <span class="month">Mar</span>
+                            </div>
+                            <div class="event-details">
+                                <h4>Career in Data Science Webinar</h4>
+                                <p><i class="fas fa-clock"></i> 6:00 PM - 7:30 PM</p>
+                                <p><i class="fas fa-laptop"></i> Online</p>
+                            </div>
+                        </div>
+                        <div class="event-item">
+                            <div class="event-date">
+                                <span class="day">05</span>
+                                <span class="month">Apr</span>
+                            </div>
+                            <div class="event-details">
+                                <h4>Tech Hiring Fair 2023</h4>
+                                <p><i class="fas fa-clock"></i> 9:00 AM - 5:00 PM</p>
+                                <p><i class="fas fa-map-marker-alt"></i> Main Campus</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Page Section -->
+    <section class="contact-page" id="contact-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Get In Touch</h2>
+                <p>Have questions? We're here to help you on your journey to becoming a software professional.</p>
+            </div>
+            
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <div class="contact-card">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <h3>Our Locations</h3>
+                        <div class="location-tabs">
+                            <div class="location-tab active" data-location="bangalore">Bangalore</div>
+                            <div class="location-tab" data-location="hyderabad">Hyderabad</div>
+                            <div class="location-tab" data-location="pune">Pune</div>
+                        </div>
+                        <div class="location-content active" id="bangalore-location">
+                            <p>123 Tech Park, Silicon Valley Road, Bangalore - 560001</p>
+                            <p>Phone: +91 9876543210</p>
+                        </div>
+                        <div class="location-content" id="hyderabad-location">
+                            <p>456 Cyber Towers, Hi-Tech City, Hyderabad - 500081</p>
+                            <p>Phone: +91 9876543211</p>
+                        </div>
+                        <div class="location-content" id="pune-location">
+                            <p>789 IT Park, Hinjewadi Phase 1, Pune - 411057</p>
+                            <p>Phone: +91 9876543212</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-card">
+                        <i class="fas fa-clock"></i>
+                        <h3>Office Hours</h3>
+                        <div class="hours-grid">
+                            <div class="day">Monday - Friday</div>
+                            <div class="time">9:00 AM - 6:00 PM</div>
+                            <div class="day">Saturday</div>
+                            <div class="time">10:00 AM - 4:00 PM</div>
+                            <div class="day">Sunday</div>
+                            <div class="time">Closed</div>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-card">
+                        <i class="fas fa-envelope"></i>
+                        <h3>Email Us</h3>
+                        <p>General Inquiries: <a href="mailto:info@techgenius.edu">info@techgenius.edu</a></p>
+                        <p>Admissions: <a href="mailto:admissions@techgenius.edu">admissions@techgenius.edu</a></p>
+                        <p>Placements: <a href="mailto:placements@techgenius.edu">placements@techgenius.edu</a></p>
+                    </div>
+                    
+                    <div class="contact-card">
+                        <i class="fas fa-headset"></i>
+                        <h3>Call Us</h3>
+                        <p>Toll Free: <a href="tel:1800123456">1800-123-456</a></p>
+                        <p>Admissions: <a href="tel:+919876543210">+91 9876543210</a></p>
+                        <p>Support: <a href="tel:+918765432109">+91 8765432109</a></p>
+                    </div>
+                </div>
+                
+                <div class="contact-form-container">
+                    <h3>Send Us a Message</h3>
+                    <form id="contact-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" id="contact-name" placeholder=" " required>
+                                <label for="contact-name">Full Name</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" id="contact-email" placeholder=" " required>
+                                <label for="contact-email">Email Address</label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group phone-group">
+                                <span class="phone-prefix">+91</span>
+                                <input type="tel" id="contact-phone" placeholder=" " required>
+                                <label for="contact-phone">Phone Number</label>
+                            </div>
+                            <div class="form-group">
+                                <select id="contact-subject" required>
+                                    <option value=""></option>
+                                    <option value="admission">Admission Inquiry</option>
+                                    <option value="course">Course Information</option>
+                                    <option value="placement">Placement Assistance</option>
+                                    <option value="feedback">Feedback</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <label for="contact-subject">Subject</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="contact-message" rows="5" placeholder=" " required></textarea>
+                            <label for="contact-message">Your Message</label>
+                        </div>
+                        <button type="submit" class="submit-btn">Send Message</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="map-section">
+                <h3>Find Us On Map</h3>
+                <div class="map-container" id="map">
+                    <!-- Map will be loaded here via JavaScript -->
+                </div>
+                <div class="map-locations">
+                    <button class="map-location-btn active" data-location="bangalore">Bangalore Campus</button>
+                    <button class="map-location-btn" data-location="hyderabad">Hyderabad Campus</button>
+                    <button class="map-location-btn" data-location="pune">Pune Campus</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-top">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-info">
+                        <div class="footer-logo">
+                            <h2>TechGenius</h2>
+                            <span>Software Coaching Institute</span>
+                        </div>
+                        <p>Empowering the next generation of software professionals with cutting-edge education and industry-ready skills.</p>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#"><i class="fab fa-youtube"></i></a>
+                        </div>
+                    </div>
+                    <div class="footer-links">
+                        <h3>Quick Links</h3>
+                        <ul>
+                            <li><a href="index.html">Home</a></li>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="courses.html">Courses</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                            <li><a href="blog.html">Blog</a></li>
+                            <li><a href="careers.html">Careers</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-links">
+                        <h3>Our Courses</h3>
+                        <ul>
+                            <li><a href="#">Web Development</a></li>
+                            <li><a href="#">Mobile App Development</a></li>
+                            <li><a href="#">Data Science & AI</a></li>
+                            <li><a href="#">Cloud Computing</a></li>
+                            <li><a href="#">Cybersecurity</a></li>
+                            <li><a href="#">DevOps</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-newsletter">
+                        <h3>Subscribe to Newsletter</h3>
+                        <p>Stay updated with our latest courses, events, and tech news.</p>
+                        <form class="newsletter-form">
+                            <input type="email" placeholder="Your Email Address">
+                            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; 2023 TechGenius Software Coaching Institute. All Rights Reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Sitemap</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Success Modal -->
+    <div class="modal" id="success-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <h3>Thank You!</h3>
+                <p>Your message has been sent successfully. Our team will get back to you within 24 hours.</p>
+            </div>
+        </div>
+    </div>
+    <%- include('partials/footer')%>
+    <script src="../js/Home.js"></script>
+    <script src="../js/Admisstion.js"></script>
+    <script src="../js/Contact&About.js"></script>
+    <script src="../public/js/Contact&About.js"></script>
+    <!-- Google Maps API Script -->
+     
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+    <!-- Main JavaScript -->
+</body>
+</html>

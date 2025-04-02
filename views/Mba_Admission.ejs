@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBA Admissions Abroad | Manya Education</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/Mba_Admission.css">
+    <link rel="stylesheet" href="../css/Home.css">
+</head>
+<body>
+    <!--  Header -->
+    <%- include('partials/header') %> 
+    <div class="page-container">
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1>MBA Admissions Abroad</h1>
+                <div class="breadcrumb">
+                    <a href="/">Home</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <a href="/admissions">Admissions</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>MBA Admissions</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="main-content">
+            <div class="content-wrapper">
+                <div class="content-left">
+                    <div class="content-section">
+                        <p>Also known as a Master of Business Administration, an MBA is a postgraduate degree that offers an in-depth understanding of the different aspects of business management. The program is designed to help you develop skills in accounting, marketing, finance, and business.</p>
+                        <p>According to a study, 71% of B-School graduates were either 'very satisfied' or 'fairly satisfied' by the impact of the postgraduate degree on their career. These promising numbers have encouraged the youth to pursue an MBA. It promises better opportunities and higher salaries.</p>
+                    </div>
+
+                    <div class="content-section">
+                        <h2>Why study an MBA abroad?</h2>
+                        <div class="benefits-grid">
+                            <div class="benefit-item">
+                                <h3>Global Exposure and Cultural Learning</h3>
+                                <p>An MBA abroad allows Indian students to interact with peers from diverse cultural backgrounds, enhancing their global perspective and fostering cross-cultural communication skills.</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h3>Quality Education and Advanced Curriculum</h3>
+                                <p>International MBA programs often feature cutting-edge curricula and teaching methodologies, integrating real-world case studies, industry projects, and the latest business trends.</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h3>Better Career Opportunities and Networking</h3>
+                                <p>Graduating from a globally recognized institution enhances employability, offering access to multinational companies and top-tier internships.</p>
+                            </div>
+                            <div class="benefit-item">
+                                <h3>Higher Earning Potential</h3>
+                                <p>An MBA from a reputed international institution often results in better starting salaries and long-term earning potential compared to domestic MBAs.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-section">
+                        <h2>Popular trending MBA courses</h2>
+                        <table class="courses-table">
+                            <tr>
+                                <th>Specialization</th>
+                                <th>Description</th>
+                            </tr>
+                            <tr>
+                                <td>MBA in Finance</td>
+                                <td>Focuses on financial management, investment strategies, and corporate financial planning, preparing students for roles in banking, investment, and financial consulting.</td>
+                            </tr>
+                            <tr>
+                                <td>MBA in General Management</td>
+                                <td>Combines data analytics and business strategy to derive insights, helping companies make data-driven decisions.</td>
+                            </tr>
+                            <tr>
+                                <td>MBA in Consulting</td>
+                                <td>Offers a comprehensive overview of business functions, equipping students with leadership and strategic skills applicable across industries.</td>
+                            </tr>
+                            <tr>
+                                <td>MBA in Marketing</td>
+                                <td>Covers market research, consumer behavior, branding, and digital marketing, aiming to create effective marketing strategies.</td>
+                            </tr>
+                            <tr>
+                                <td>MBA in Business Analytics</td>
+                                <td>Prepares students to address business challenges by providing advisory services to organizations on strategy, processes, and technology.</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="content-right">
+                    <form class="enquiry-form" id="enquiryForm" action="/submit-mba-enquiry" method="POST">
+                        <h3>Planning to study abroad?</h3>
+                        <p>Get free 1-on-1 counselling with our experts</p>
+            
+                        <div class="form-group">
+                            <input type="text" id="firstName" name="firstName" required>
+                            <label for="firstName">First Name</label>
+                        </div>
+            
+                        <div class="form-group">
+                            <input type="text" id="lastName" name="lastName" required>
+                            <label for="lastName">Last Name</label>
+                        </div>
+            
+                        <div class="form-group">
+                            <input type="email" id="email" name="email" required>
+                            <label for="email">Email</label>
+                        </div>
+            
+                        <div class="form-group">
+                            <input type="tel" id="mobile" name="mobile" pattern="[0-9]{10}" required>
+                            <label for="mobile">Mobile No. (10 digits)</label>
+                        </div>
+            
+                        <div class="form-group">
+                            <select id="program" name="program" required>
+                                <option value="">Select Program</option>
+                                <option value="GMAT">GMAT</option>
+                                <option value="GRE">GRE</option>
+                                <option value="IELTS">IELTS</option>
+                            </select>
+                            <label for="program">Select Program</label>
+                        </div>
+            
+                        <div class="form-group">
+                            <select id="mode" name="mode" required>
+                                <option value="">Select Mode</option>
+                                <option value="Classroom">Classroom Coaching</option>
+                                <option value="Online">Online Coaching</option>
+                            </select>
+                            <label for="mode">Select Mode</label>
+                        </div>
+            
+                        <div class="form-group">
+                            <select id="city" name="city" required>
+                                <option value="">Select City</option>
+                                <option value="Noida">Noida</option>
+                                <option value="Delhi">Delhi</option>
+                                <option value="Gurgaon">Gurgaon</option>
+                            </select>
+                            <label for="city">Select City</label>
+                        </div>
+            
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="authorize" name="authorize" required>
+                            <label for="authorize">I authorize Manya - The Princeton Review to contact me even if my number is registered with DND to assist with my enquiry and get regular updates through SMS/Whatsapp.</label>
+                        </div>
+            
+                        <button type="submit" class="submit-btn">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <%- include('partials/footer')%>
+    </div>
+
+    <script src="../js/Home.js"></script>
+    <script src="../js/Mba_Admission.js"></script>
+</body>
+</html>

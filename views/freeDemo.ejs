@@ -67,7 +67,7 @@
         .hero-section {
             background: linear-gradient(rgba(43, 45, 66, 0.9), rgba(43, 45, 66, 0.9)),
                         url('https://source.unsplash.com/1600x400/?coding,technology') center/cover;
-            padding: 4rem 2rem;
+            padding: 6.4rem 2rem;
             color: var(--white);
             position: relative;
         }
@@ -76,12 +76,14 @@
             max-width: 1200px;
             margin: 0 auto;
             animation: fadeInDown 0.5s ease;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+
         }
 
         .hero-content h1 {
             font-size: 3rem;
-            margin-bottom: 1rem;
+            /* margin-bottom: 1rem; */
             font-weight: 700;
         }
 
@@ -625,106 +627,6 @@
                 </div>
             </section>
 
-            <!-- Available Demo Videos Section -->
-            <!-- <section class="content-section">
-                <div class="section-header">
-                    <h2>Available Demo Videos</h2>
-                    <p>Get a taste of our teaching style and course content with these free demo videos</p>
-                </div>
-
-                <div class="video-grid">
-                    <div class="video-grid">
-                        <% if (videos.length === 0) { %>
-                            <p>No videos available.</p>
-                        <% } else { %>
-                            <% videos.forEach(video => { %>
-                                <div>
-                                    <h2><%= video.examType %></h2>
-                                    <p><%= video.description %></p>
-                                    <video width="320" height="240" controls>
-                                        <source src="<%= video.videoPath %>" type="video/mp4">
-                                        Your browser does not support the video tag.
-                                    </video>
-                                </div>
-                            <% }) %>
-                        <% } %>
-                    </div>
-                    
-                    <div>
-                        <h2>React.js Essentials</h2>
-                        <p>Master the fundamentals of React.js and learn how to build dynamic user interfaces with this popular JavaScript library.</p>
-                        <video width="320" height="240" controls>
-                            <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    
-                    <div>
-                        <h2>Python Programming</h2>
-                        <p>Get started with Python programming and learn the syntax, data structures, and basic algorithms.</p>
-                        <video width="320" height="240" controls>
-                            <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    
-                    <div>
-                        <h2>Data Science with Python</h2>
-                        <p>Learn how to analyze and visualize data using Python libraries like Pandas, NumPy, and Matplotlib.</p>
-                        <video width="320" height="240" controls>
-                            <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    
-                    <div>
-                        <h2>Node.js Backend Development</h2>
-                        <p>Build scalable server-side applications with Node.js, Express, and MongoDB.</p>
-                        <video width="320" height="240" controls>
-                            <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    
-                    <div>
-                        <h2>Mobile App Development with Flutter</h2>
-                        <p>Create beautiful cross-platform mobile applications using Flutter and Dart programming language.</p>
-                        <video width="320" height="240" controls>
-                            <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    
-                    <div>
-                        <h2>DevOps Fundamentals</h2>
-                        <p>Learn the principles of DevOps and how to implement CI/CD pipelines for efficient software delivery.</p>
-                        <video width="320" height="240" controls>
-                            <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    
-                    <div>
-                        <h2>Cloud Computing with AWS</h2>
-                        <p>Master the fundamentals of cloud computing and learn how to deploy applications on Amazon Web Services.</p>
-                        <video width="320" height="240" controls>
-                            <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    
-                    <div>
-                        <h2>Machine Learning Basics</h2>
-                        <p>Get started with machine learning concepts and implement your first ML models using Python and scikit-learn.</p>
-                        <video width="320" height="240" controls>
-                            <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div> 
-                </div>
-            </section> -->
-
-
             <section class="content-section">
                 <div class="section-header">
                     <h2>Available Demo Videos</h2>
@@ -754,9 +656,6 @@
                                     Your browser does not support the video tag.
                                 </video>
                                 <!-- Add a delete button -->
-                                <form action="/delete-video/<%= video._id %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this video?');">
-                                    <button type="submit" class="delete-button">Delete</button>
-                                </form>
                             </div>
                         <% }) %>
                     <% } else { %>
@@ -773,15 +672,15 @@
                 </div>
                 <div class="testimonials-slider">
                     <div class="testimonial-slide active">
-                        <img src="https://source.unsplash.com/100x100/?portrait,man" alt="Student Avatar" class="testimonial-avatar">
+                        <img src="data:image/jpeg;base64,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" alt="Student Avatar" class="testimonial-avatar">
                         <div class="testimonial-rating">★★★★★</div>
-                        <p class="testimonial-content">"The software development course completely transformed my career. The instructors were incredibly knowledgeable and supportive, and the hands-on projects gave me real-world experience that I could showcase in my portfolio. Within two months of completing the course, I landed a job as a junior developer!"</p>
-                        <p class="testimonial-author">Michael Johnson</p>
-                        <p class="testimonial-role">Web Developer at TechCorp</p>
+                        <p class="testimonial-content">"Our courses completely transformed my career. The instructors were incredibly knowledgeable and supportive, and the hands-on projects gave me real-world experience that I could showcase in my portfolio. Within two months of completing the course, I landed a job as a junior developer!"</p>
+                        <p class="testimonial-author"></p>
+                        <p class="testimonial-role">GMAT at TechCorp</p>
                     </div>
                     
                     <div class="testimonial-slide">
-                        <img src="https://source.unsplash.com/100x100/?portrait,woman" alt="Student Avatar" class="testimonial-avatar">
+                        <img src="data:image/jpeg;base64,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" alt="Student Avatar" class="testimonial-avatar">
                         <div class="testimonial-rating">★★★★★</div>
                         <p class="testimonial-content">"I had tried several online courses before, but none of them provided the depth and clarity that this program offered. The step-by-step approach to teaching complex programming concepts made learning enjoyable and accessible. The support from instructors and the community was exceptional!"</p>
                         <p class="testimonial-author">Sarah Williams</p>
@@ -789,11 +688,11 @@
                     </div>
                     
                     <div class="testimonial-slide">
-                        <img src="https://source.unsplash.com/100x100/?portrait,person" alt="Student Avatar" class="testimonial-avatar">
+                        <img src="data:image/jpeg;base64,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" alt="Student Avatar" class="testimonial-avatar">
                         <div class="testimonial-rating">★★★★☆</div>
                         <p class="testimonial-content">"As someone with no prior programming experience, I was worried about keeping up with the course. However, the curriculum was designed so well that I could follow along easily. The practical exercises reinforced my learning, and I'm now confident in my coding abilities. This course exceeded my expectations!"</p>
-                        <p class="testimonial-author">David Chen</p>
-                        <p class="testimonial-role">Junior Developer at StartupX</p>
+                        <p class="testimonial-author">Kritika Nagar</p>
+                        <p class="testimonial-role">GMAT at StartupX</p>
                     </div>
                 </div>
                 
@@ -820,6 +719,9 @@
         <%- include('partials/footer') %> 
 
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
     <!-- JavaScript for Testimonial Slider -->
     <script>

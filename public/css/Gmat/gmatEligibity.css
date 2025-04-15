@@ -28,7 +28,7 @@
   .hero-section {
     background: linear-gradient(rgba(43, 45, 66, 0.9), rgba(43, 45, 66, 0.9)),
                 url('https://source.unsplash.com/1600x400/?university,business') center/cover;
-    padding: 4rem 2rem;
+    padding: 6.4rem 2rem;
     color: var(--white);
     position: relative;
   }
@@ -37,11 +37,12 @@
     max-width: 1200px;
     margin: 0 auto;
     animation: fadeInDown 0.5s ease;
+    display: flex;
+    flex-direction: column;
   }
   
   .hero-content h1 {
     font-size: 2.5rem;
-    margin-bottom: 1rem;
     font-weight: 600;
   }
   
@@ -404,6 +405,9 @@
       font-size: 2rem;
     }
   
+    .hero-content{
+      margin-top: 50px;
+    }
     .main-content {
       padding: 0 1rem;
       margin-top: -30px;

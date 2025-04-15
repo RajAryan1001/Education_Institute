@@ -1,11 +1,24 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
+
+const bcrypt = require('bcrypt');
+const session = require('express-session');
+const jwt = require('jsonwebtoken');
+const cookieParser=require('cookie-parser');
 const website = express();
-const multer=require('multer')
+const multer = require('multer')
 const path = require('path');
 const fs = require('fs');     // VIdeo
+const userModel=require('./models/user.model')
+const mongoose= require('mongoose');
+const Admin = require('./models/admin');
+const OTP = require('./models/otp');
+const { sendOTPEmail } = require('./utils/emailService');
+const {  isSuperAdmin } = require('./utils/authMiddleware');
+const { render } = require('ejs');
 
+const Razorpay = require('razorpay');
+
+require('dotenv').config();
 
 // Set up the view engine
 website.set('view engine', 'ejs');
@@ -18,10 +31,374 @@ website.set('views', path.join(__dirname, 'views'));
 website.use(express.static('public'));
 
 // Body parser middleware
-// website.use(express.json()); // Parse JSON bodies
+website.use(express.json()); // Parse JSON bodies
 website.use(express.urlencoded({ extended: true })); // Parse URL-encoded form data
+website.use(cookieParser());
 
-mongoose.connect('mongodb://localhost:27017/Education')
+
+
+
+
+mongoose.connect("mongodb://localhost:27017/Education");
+
+const MongoStore = require('connect-mongo');
+
+const sessionStore = MongoStore.create({
+    mongoUrl: "mongodb://localhost:27017/Education",
+    collectionName: 'sessions',
+    ttl: 14 * 24 * 60 * 60
+});
+
+sessionStore.on('error', (error) => {
+    console.error('Session store error:', error);
+});
+
+
+// // Session configuration
+website.use(session({
+    secret: process.env.SESSION_SECRET || 'session-secret-key',
+    resave: false,  // Important: should be false
+    saveUninitialized: false,  // Important: should be false
+    store: MongoStore.create({
+      mongoUrl: "mongodb://localhost:27017/Education",
+      collectionName: 'sessions',
+      ttl: 14 * 24 * 60 * 60, // 14 days
+      autoRemove: 'interval',
+      autoRemoveInterval: 60, // Remove expired sessions every 60 minutes
+      touchAfter: 24 * 3600 // Time period in seconds
+    }),
+    cookie: { 
+      secure: false, // Set to false in development, true in production
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax' // Use 'none' in production with secure: true
+    }
+  }));
+
+
+const isAdminAuthenticated = async (req, res, next) => {
+    
+    if (req.session.isAdminAuthenticated) return next();
+    res.redirect('/adminLogin');
+};
+
+
+website.get('/check', async (req, res) => {
+    console.log(req.session);
+        
+});
+
+
+mongoose.connect('mongodb://localhost:27017/Education').then(()=> {
+    console.log(`db connect`)
+})
+
+// adminlogin and session
+
+website.get('/adminLogin',async(req,res)=>{
+
+  
+    res.render('auth/login');
+})
+
+// Send OTP to admin email
+// website.post('/admin/send-otp', async (req, res) => {
+//     const { email } = req.body;
+
+//     try {
+//         // Check if admin exists
+//         const admin = await Admin.findOne({ email });
+//         if (!admin) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'No admin found with this email'
+//             });
+//         }
+
+//         // Generate and save OTP
+//         const otp = admin.generateOTP();
+//         await admin.save();
+
+//         // Send OTP via email
+//         const emailSent = await sendOTPEmail(email, otp);
+//         if (!emailSent) {
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to send OTP email'
+//             });
+//         }
+
+//         res.render('enter-otp', { 
+//             title: 'Enter OTP',
+//             email: email,
+//             hideHeader: true,
+//             hideFooter: true
+//         });
+
+//     } catch (error) {
+//         console.error('Error in send-otp:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error'
+//         });
+//     }
+// });
+
+website.post('/createAdmin', async (req, res) => {
+    try {
+        const newAdmin = new Admin({
+            name: 'John Smith',
+            email: 'rajpatil484950@gmail.com',
+            password: 'TestPass123!', // Will be hashed by pre-save hook
+            isSuperAdmin: false
+        });
+
+        await newAdmin.save();
+
+        console.log('Admin created successfully');
+        return res.status(201).send('Admin created');
+    } catch (err) {
+        console.error('Error creating admin:', err);
+        return res.status(500).send('Error creating admin');
+    }
+});
+
+
+website.post('/admin/send-otp', async (req, res) => {
+
+
+    const email = req.body.email.trim().toLowerCase();
+    console.log("Looking for admin with email:", email);
+
+
+
+
+    try {
+        const admin = await Admin.findOne({ email });
+
+
+        if (!admin) {
+            return res.status(404).json({
+                success: false,
+                message: 'No admin found with this email'
+            });
+        }
+
+        const otp = admin.generateOTP();
+        await admin.save();
+
+        const emailSent = await sendOTPEmail(email, otp);
+        if (!emailSent) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to send OTP email'
+            });
+        }
+
+        res.render('auth/otp', { 
+            title: 'Enter OTP',
+            email: email,
+            hideHeader: true,
+            hideFooter: true
+        });
+
+    } catch (error) {
+        console.error('Error in send-otp:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+});
+
+
+// Resend OTP
+// Resend OTP - Updated Version
+website.post('/admin/resend-otp', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Check if admin exists
+        const admin = await Admin.findOne({ email });
+        if (!admin) {
+            return res.status(404).json({
+                success: false,
+                message: 'No admin found with this email'
+            });
+        }
+
+        // Generate new OTP (this will automatically clear any existing OTP)
+        const otp = admin.generateOTP();
+        await admin.save();
+
+        // Send new OTP via email
+        const emailSent = await sendOTPEmail(email, otp);
+        if (!emailSent) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to resend OTP email'
+            });
+        }
+
+        // Return the same response format as send-otp
+        res.render('auth/otp', { 
+            title: 'Enter OTP',
+            email: email,
+            hideHeader: true,
+            hideFooter: true,
+            message: 'New OTP has been sent to your email'
+        });
+
+    } catch (error) {
+        console.error('Error in resend-otp:', error);
+        res.status(500).render('auth/otp', {
+            title: 'Error',
+            email: email,
+            hideHeader: true,
+            hideFooter: true,
+            error: 'Internal server error'
+        });
+    }
+});
+// Verify OTP and login
+// website.post('/admin/verify-otp', async (req, res) => {
+//     const { email, otp } = req.body;
+
+//     try {
+//         // Find admin
+//         const admin = await Admin.findOne({ email });
+//         if (!admin) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'No admin found with this email'
+//             });
+//         }
+
+//         // Verify OTP (this will clear the OTP regardless of match)
+//         const isValidOTP = admin.verifyOTP(otp);
+//         if (!isValidOTP) {
+//             await admin.save(); // Save to clear the invalid OTP
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Invalid or expired OTP'
+//             });
+//         }
+
+//         // Save admin to clear OTP and update last login
+//         admin.lastLogin = new Date();
+//         await admin.save();
+
+//         // Create session
+        
+
+//         req.session.isAdminAuthenticated = true;
+//         req.session.adminId = admin._id;
+//         req.session.adminEmail = admin.email;
+//         req.session.adminName = admin.name;
+//         req.session.isSuperAdmin = admin.isSuperAdmin;
+
+//         // res.json({
+//         //     success: true,
+//         //     message: 'OTP verified successfully',
+//         //     admin: {
+//         //         name: admin.name,
+//         //         email: admin.email,
+//         //         isSuperAdmin: admin.isSuperAdmin
+//         //     }
+//         // });
+
+//         res.redirect('/igcse-ib-enquiries');
+
+//     } catch (error) {
+//         console.error('Error in verify-otp:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error'
+//         });
+//     }
+// });
+
+website.post('/admin/verify-otp', async (req, res) => {
+    const { email, otp } = req.body;
+  
+    try {
+      const admin = await Admin.findOne({ email });
+      if (!admin) {
+        req.flash('error', 'No admin found with this email');
+        return res.redirect('/adminLogin');
+      }
+  
+      const isValidOTP = admin.verifyOTP(otp);
+      if (!isValidOTP) {
+        await admin.save();
+        req.flash('error', 'Invalid or expired OTP');
+        return res.redirect('/adminLogin');
+      }
+  
+      admin.lastLogin = new Date();
+      await admin.save();
+  
+      // Set session data
+      req.session.isAdminAuthenticated = true;
+      req.session.adminId = admin._id;
+      req.session.adminEmail = admin.email;
+      req.session.adminName = admin.name;
+      req.session.isSuperAdmin = admin.isSuperAdmin;
+  
+      // Force immediate save and wait for confirmation
+      await new Promise((resolve, reject) => {
+        req.session.save(err => {
+          if (err) {
+            console.error('Session save error:', err);
+            return reject(err);
+          }
+          console.log('Session saved to store with ID:', req.sessionID);
+          resolve();
+        });
+      });
+  
+      // Verify the session was actually saved
+      const sessionData = await mongoose.connection.db.collection('sessions')
+        .findOne({ _id: req.sessionID });
+      
+      console.log('Session in database:', sessionData);
+  
+      res.redirect('/igcse-ib-enquiries');
+  
+    } catch (error) {
+      console.error('Error in verify-otp:', error);
+      res.redirect('/adminLogin');
+    }
+  });
+
+  website.use(async (req, res, next) => {
+    console.log('Current session ID:', req.sessionID);
+    console.log('Session data:', req.session);
+    
+    // Verify session exists in database
+    if (req.sessionID) {
+      const sessionData = await mongoose.connection.db.collection('sessions')
+        .findOne({ _id: req.sessionID });
+      console.log('Database session:', sessionData);
+    }
+    
+    next();
+  });
+
+// Admin logout
+website.get('/admin/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            console.error('Error destroying session:', err);
+            req.flash('error', 'Failed to logout');
+            return res.redirect('/admin/dashboard');
+        }
+        res.redirect('/adminLogin');
+    });
+});
+
+
+
 
 // Handle the route for "/home"
 website.get('/', (req, res) => {
@@ -33,19 +410,26 @@ website.get('/courses', (req, res) => {
     res.render('Courses');  // Render the "Home" view
 });
 
-// Handle the route for "/admission"
-website.get('/abroad_admission', (req, res) => {
-    res.render('Undergrad_Abroad');  // This will render views/admission.ejs
-});
 
-website.get('/igcse&ibt', (req, res) => { 
+const authLogin=(req,res,next)=>{
+
+    const token = req.cookies.token;
+    if(!token){
+        res.redirect('/auth/login');
+    }
+    const decoded = jwt.verify(token,'secret');
+    req.user = decoded;
+    next();
+    
+}
+
+website.get('/igcse&ibt', (req, res) => {
     res.render('IGCSE&IBTutoring');   // This will render views/admission.ejs
 });
 
-website.get('/upcomingbooking', (req, res)=>{
+website.get('/upcomingbooking', (req, res) => {
     res.render('UpcomingBatches');
 })
-
 
 
 // Handle the route for "Admin desboard",
@@ -53,458 +437,11 @@ website.get('/myadmin', (req, res) => {
     res.render('panel/aaru');  // Render the "Home" view
 });
 
-// Handle the route for "Msabroad",
-website.get('/msabroad', (req, res)=>{
-     res.render('MsAbroad')
-})
-
-// Handle the route for "Msabroad",
-website.get('/mba_admission', (req, res)=>{
-    res.render('Mba_Admission')
-})
-
-// Handle the route for "Msabroad",
-website.get('/phd_abroad', (req, res)=>{
-    res.render('Phd_Adroad')
-})
-
 // Handle the route for "Contact&About Us",
 
-website.get('/contact&about',(req,res)=>{
+website.get('/contact&about', (req, res) => {
     res.render('Contact&About')
 })
-
-
-
-//  All Adminn File render 
-
-// Handle the route for "Msabroad",
-website.get('/Undergrad_Abroad_Ad', (req, res)=>{
-    res.render('panel/Undergrad_Abroad_Ad')
-})
-
-website.get('/Mba', (req, res)=>{
-    res.render('panel/Mba_Ad')
-})
-
-
-
-// Define the schema and model for enquiries
-const enquirySchema = new mongoose.Schema({
-    firstName: String,
-    lastName: String,
-    email: String,
-    mobile: String,
-    program: String,
-    city: String,
-    authorize: Boolean
-});
-
-const Enquiry = mongoose.model('undergrad_abroad_enquiry', enquirySchema);
-
-// Handle the route for "Msabroad"
-website.get('/Undergrad_Abroad_Ad', (req, res) => {
-    res.render('panel/Undergrad_Abroad_Ad');
-});
-
-website.post('/Undergrad_AbroadForm', async (req, res) => {
-    try {
-        const { firstName, lastName, email, mobile, program, city, authorize } = req.body;
-
-        // Basic validation
-        if (!firstName || !lastName || !email || !mobile || !program || !city) {
-            return res.status(400).send('All fields are required.');
-        }
-
-        // Check if the email or mobile already exists in the database
-        const existingEnquiry = await Enquiry.findOne({ $or: [{ email }, { mobile }] });
-        if (existingEnquiry) {
-            return res.status(400).send('An enquiry with this email or mobile already exists.');
-        }
-
-        // Create a new enquiry object
-        const newEnquiry = new Enquiry({
-            firstName,
-            lastName,
-            email,
-            mobile,
-            program,
-            city,
-            authorize: authorize === 'on' // Convert checkbox value to boolean
-        });
-
-        // Save the new enquiry to the database
-        await newEnquiry.save();
-        console.log('Enquiry saved successfully:', newEnquiry);
-
-        // Send a success message to the client
-        res.send(`
-            <script>
-                alert('Enquiry submitted successfully!');
-                window.location.href = '/abroad_admission'; // Redirect to the enquiries page
-            </script>
-        `);
-    } catch (error) {
-        console.error('Error saving enquiry:', error);
-        res.status(500).json({ error: 'An error occurred while submitting the form', details: error.message });
-    }
-});
-
-website.get('/enquiries', async (req, res) => {
-    try {
-        // Fetch all enquiries from the database
-        const enquiries = await Enquiry.find();
-
-        // Render the 'Undergrad_Abroad_Ad' view and pass the enquiries data to the view
-        res.render('panel/Undergrad_Abroad_Ad', { enquiries });
-    } catch (error) {
-        console.error('Error fetching enquiries:', error);
-        res.status(500).json({ error: 'An error occurred while fetching the enquiries' });
-    }
-});
-
-
-// Route to fetch data and display in the table
-website.get('/enquiries', async (req, res) => {
-    try {
-        // Fetch all enquiries from the database
-        const enquiries = await Enquiry.find();
-
-        // Render the 'Undergrad_Abroad_Ad' view and pass the enquiries data to the view
-        res.render('panel/Undergrad_Abroad_Ad', { enquiries });
-    } catch (error) {
-        console.error('Error fetching enquiries:', error);
-        res.status(500).json({ error: 'An error occurred while fetching the enquiries' });
-    }
-});
-
-website.post('/delete-enquiry/:id', async (req, res) => {
-    try {
-        const enquiryId = req.params.id;
-
-        // Attempt to delete the enquiry with the given ID
-        const result = await Enquiry.findByIdAndDelete(enquiryId);
-
-        if (result) {
-            console.log("Enquiry deleted successfully!");
-            // Redirect to the enquiries page with a success message
-            res.redirect('/enquiries');
-        } else {
-            console.log("Enquiry not found");
-            res.status(404).send('Enquiry not found');
-        }
-    } catch (error) {
-        console.error('Error deleting enquiry:', error);
-        res.status(500).json({ error: 'An error occurred while deleting the enquiry' });
-    }
-});
-
-
-// MS Abroat From Admission........
-
-// models/MsAbroadEnquiry.js
-
-// Define the schema for MS Abroad Enquiry
-const msAbroadEnquirySchema = new mongoose.Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true },
-    mobile: { type: String, required: true },
-    program: { type: String, required: true },
-    city: { type: String, required: true },
-    authorize: { type: Boolean, required: true },
-    createdAt: { type: Date, default: Date.now } // Add createdAt field
-});
-
-// Create the model
-const MsAbroadEnquiry = mongoose.model('MsAbroadEnquiry', msAbroadEnquirySchema);
-
-// Export the model
-module.exports = MsAbroadEnquiry;
-
-// Handle the form submission for MS Abroad
-website.post('/submit-ms-abroad-enquiry', async (req, res) => {
-    try {
-        // Log the form data
-        console.log('Form data received:', req.body);
-
-        // Extract form data from the request body
-        const { firstName, lastName, email, mobile, program, city, authorize } = req.body;
-
-        // Check if the email or mobile already exists in the database
-        const existingEnquiry = await MsAbroadEnquiry.findOne({ $or: [{ email }, { mobile }] });
-        if (existingEnquiry) {
-            return res.status(400).send('An enquiry with this email or mobile already exists.');
-        }
-
-        // Create a new enquiry object
-        const newMsAbroadEnquiry = new MsAbroadEnquiry({
-            firstName,
-            lastName,
-            email,
-            mobile,
-            program,
-            city,
-            authorize: authorize === 'on' // Convert checkbox value to boolean
-        });
-
-        // Save the new enquiry to the database
-        await newMsAbroadEnquiry.save();
-        console.log('MS Abroad enquiry saved successfully:', newMsAbroadEnquiry);
-
-        // Send a success message to the client with an alert and redirect
-        res.send(`
-            <script>
-                alert('MS Abroad enquiry submitted successfully!');
-                window.location.href = '/msabroad'; // Redirect to the form page
-            </script>
-        `);
-    } catch (error) {
-        console.error('Error saving MS Abroad enquiry:', error.message);
-        res.status(500).send(`An error occurred while submitting the form: ${error.message}`);
-    }
-});
-
-// Route to fetch all MS Abroad enquiries (protected)
-website.get('/ms-abroad-enquiries', isAuthenticated, async (req, res) => {
-    try {
-        // Fetch all MS Abroad enquiries from the database
-        const msAbroadEnquiries = await MsAbroadEnquiry.find();
-
-        // Render the admin panel template and pass the enquiries data
-        res.render('panel/MS_Abroad_Ad', { msAbroadEnquiries: msAbroadEnquiries });
-    } catch (error) {
-        console.error('Error fetching MS Abroad enquiries:', error);
-        res.status(500).json({ error: 'An error occurred while fetching the enquiries', details: error.message });
-    }
-});
-// Route to delete an enquiry by ID
-// Route to handle deleting an enquiry by its ID
-// Route to delete an enquiry by ID
-website.post('/delete-ms-abroad-enquiry/:id', async (req, res) => {
-    try {
-        const enquiryId = req.params.id;  // Get the enquiry ID from the URL parameter
-
-        // Delete the enquiry from the database using the _id
-        await MsAbroadEnquiry.findByIdAndDelete(enquiryId);
-
-        // After deletion, redirect back to the MS_Abroad_Ad page to see the updated list
-        res.redirect('/ms-abroad-enquiries');
-    } catch (error) {
-        console.error('Error deleting enquiry:', error);
-        res.status(500).json({ error: 'An error occurred while deleting the enquiry', details: error.message });
-    }
-});
-
-
-// 3. Mba Admission...
-// models/MbaEnquiry.js
-
-// Define the schema for MBA Enquiry
-const mbaEnquirySchema = new mongoose.Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true },
-    mobile: { type: String, required: true },
-    program: { type: String, required: true },
-    mode: { type: String, required: true }, // Mode of study (online, offline, etc.)
-    city: { type: String, required: true },
-    authorize: { type: Boolean, required: true }, // Whether the enquiry is authorized or not
-    createdAt: { type: Date, default: Date.now } // Add createdAt field
-});
-
-// Create the model
-const MbaEnquiry = mongoose.model('MbaEnquiry', mbaEnquirySchema);
-
-// Export the model
-module.exports = MbaEnquiry;
-
-
-// Route to display the form for submitting an MBA enquiry
-website.get('/mba-enquiry', (req, res) => {
-    res.render('Mba_Admission'); // Render the form page
-});
-
-// Handle the form submission for MBA Enquiry
-website.post('/submit-mba-enquiry', async (req, res) => {
-    try {
-        // Log the form data
-        console.log('Form data received:', req.body);
-
-        // Extract form data from the request body
-        const { firstName, lastName, email, mobile, program, mode, city, authorize } = req.body;
-
-        // Check if the email or mobile already exists in the database
-        const existingEnquiry = await MbaEnquiry.findOne({ $or: [{ email }, { mobile }] });
-        if (existingEnquiry) {
-            return res.status(400).send('An enquiry with this email or mobile already exists.');
-        }
-
-        // Create a new enquiry object
-        const newMbaEnquiry = new MbaEnquiry({
-            firstName,
-            lastName,
-            email,
-            mobile,
-            program,
-            mode,
-            city,
-            authorize: authorize === 'on' // Convert checkbox value to boolean
-        });
-
-        // Save the new enquiry to the database
-        await newMbaEnquiry.save();
-        console.log('MBA enquiry saved successfully:', newMbaEnquiry);
-
-        // Send a success message to the client with an alert and redirect
-        res.send(`
-            <script>
-                alert('MBA enquiry submitted successfully!');
-                window.location.href = '/mba_admission'; // Redirect to the form page
-            </script>
-        `);
-    } catch (error) {
-        console.error('Error saving MBA enquiry:', error.message);
-        res.status(500).send(`An error occurred while submitting the form: ${error.message}`);
-    }
-});
-
-// Route to fetch all MBA enquiries (protected)
-website.get('/mba_enquiries', isAuthenticated, async (req, res) => {
-    try {
-        // Fetch all MBA enquiries from the database
-        const mbaEnquiries = await MbaEnquiry.find();
-
-        // Render the admin panel template and pass the enquiries data
-        res.render('panel/Mba_Ad', { mbaEnquiries: mbaEnquiries });
-    } catch (error) {
-        console.error('Error fetching MBA enquiries:', error);
-        res.status(500).json({ error: 'An error occurred while fetching the enquiries', details: error.message });
-    }
-});
-
-// Route to delete an MBA enquiry by ID
-website.post('/delete-mba-enquiry/:id', isAuthenticated, async (req, res) => {
-    try {
-        const enquiryId = req.params.id; // Get the ID from the URL
-
-        // Find the enquiry by ID and delete it
-        await MbaEnquiry.findByIdAndDelete(enquiryId);
-
-        // Redirect back to the MBA enquiries page
-        res.redirect('/mba_enquiries');
-    } catch (error) {
-        console.error('Error deleting MBA enquiry:', error);
-        res.status(500).send('An error occurred while deleting the enquiry.');
-    }
-});
-
-//4  Phd Admission.....
-
-// models/PhdEnquiry.js
-
-// Define the schema for PhD Enquiry
-const phdEnquirySchema = new mongoose.Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true },
-    mobile: { type: String, required: true },
-    program: { type: String, required: true },
-    mode: { type: String, required: true }, // Mode of study (online, offline, etc.)
-    city: { type: String, required: true },
-    authorize: { type: Boolean, required: true }, // Whether the enquiry is authorized or not
-    createdAt: { type: Date, default: Date.now } // Add createdAt field
-});
-
-// Create the model
-const PhdEnquiry = mongoose.model('PhdEnquiry', phdEnquirySchema);
-
-// Export the model
-module.exports = PhdEnquiry;
-
-// Route to display the form for submitting a PhD enquiry
-website.get('/phd-enquiry', (req, res) => {
-    res.render('Phd_Adroad'); // Render the form page
-});
-
-
-// Handle the form submission for PhD Enquiry
-website.post('/submit-phd-enquiry', async (req, res) => {
-    try {
-        // Log the form data
-        console.log('Form data received:', req.body);
-
-        // Extract form data from the request body
-        const { firstName, lastName, email, mobile, program, mode, city, authorize } = req.body;
-
-        // Check if the email or mobile already exists in the database
-        const existingEnquiry = await PhdEnquiry.findOne({ $or: [{ email }, { mobile }] });
-        if (existingEnquiry) {
-            return res.status(400).send('An enquiry with this email or mobile already exists.');
-        }
-
-        // Create a new enquiry object
-        const newPhdEnquiry = new PhdEnquiry({
-            firstName,
-            lastName,
-            email,
-            mobile,
-            program,
-            mode,
-            city,
-            authorize: authorize === 'on' // Convert checkbox value to boolean
-        });
-
-        // Save the new enquiry to the database
-        await newPhdEnquiry.save();
-        console.log('PhD enquiry saved successfully:', newPhdEnquiry);
-
-        // Send a success message to the client with an alert and redirect
-        res.send(`
-            <script>
-                alert('PhD enquiry submitted successfully!');
-                window.location.href = '/phd-enquiry'; // Redirect to the form page
-            </script>
-        `);
-    } catch (error) {
-        console.error('Error saving PhD enquiry:', error.message);
-        res.status(500).send(`An error occurred while submitting the form: ${error.message}`);
-    }
-});
-
-
-// Route to fetch all PhD enquiries (protected)
-website.get('/phd_enquiries', isAuthenticated, async (req, res) => {
-    try {
-        // Fetch all PhD enquiries from the database
-        const phdEnquiries = await PhdEnquiry.find();
-
-        // Render the admin panel template and pass the enquiries data
-        res.render('panel/Phd_enquiry', { phdEnquiries: phdEnquiries });
-    } catch (error) {
-        console.error('Error fetching PhD enquiries:', error);
-        res.status(500).json({ error: 'An error occurred while fetching the enquiries', details: error.message });
-    }
-});
-
-
-// Route to delete a PhD enquiry
-// Route to delete a PhD enquiry by ID
-website.post('/delete-phd-enquiry/:id', isAuthenticated, async (req, res) => {
-    try {
-        const enquiryId = req.params.id; // Get the ID from the URL
-
-        // Find the enquiry by ID and delete it
-        await PhdEnquiry.findByIdAndDelete(enquiryId);
-
-        // Redirect back to the PhD enquiries page
-        res.redirect('/phd_enquiries');
-    } catch (error) {
-        console.error('Error deleting PhD enquiry:', error);
-        res.status(500).send('An error occurred while deleting the enquiry.');
-    }
-});
-
 
 //  5.  IGCSE&IBTutoring.............
 
@@ -526,7 +463,6 @@ const igcseIBTutoringSchema = new mongoose.Schema({
 
 // Create the model
 const IGCSEIBTutoring = mongoose.model('IGCSEIBTutoring', igcseIBTutoringSchema);
-
 
 // Export the model
 module.exports = IGCSEIBTutoring;
@@ -552,7 +488,7 @@ website.post('/submit-igcse-ib-tutoring', async (req, res) => {
         if (existingEnquiry) {
             return res.status(400).send('An enquiry with this email or mobile already exists.');
         }
-
+        
         // Create a new enquiry object
         const newIGCSEIBTutoringEnquiry = new IGCSEIBTutoring({
             firstName,
@@ -585,8 +521,9 @@ website.post('/submit-igcse-ib-tutoring', async (req, res) => {
 
 // Route to fetch all IGCSE & IB Tutoring enquiries and render them in the view.
 // Route to fetch all IGCSE & IB Tutoring enquiries (protected)
-website.get('/igcse-ib-enquiries', isAuthenticated, async (req, res) => {
+website.get('/igcse-ib-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
+
         // Fetch all IGCSE & IB Tutoring enquiries from the database
         const igcseIBEnquiries = await IGCSEIBTutoring.find();
 
@@ -698,22 +635,55 @@ website.post('/submit-booking', async (req, res) => {
 
 
 // Route to fetch all bookings (protected)
-website.get('/upcoming-bookings', isAuthenticated, async (req, res) => {
-    try {
-        // Fetch all bookings from the database
-        const bookings = await Booking.find();
+// website.get('/upcoming-bookings', isAuthenticated, async (req, res) => {
+//     try {
+//         // Fetch all bookings from the database
+//         const bookings = await Booking.find();
 
-        // Render the admin panel template and pass the bookings data
-        res.render('panel/Upcoming_Booking_Ad', { bookings: bookings });
-    } catch (error) {
-        console.error('Error fetching bookings:', error);
-        res.status(500).json({ error: 'An error occurred while fetching the bookings', details: error.message });
-    }
+//         // Render the admin panel template and pass the bookings data
+//         res.render('panel/Upcoming_Booking_Ad', { bookings: bookings });
+//     } catch (error) {
+//         console.error('Error fetching bookings:', error);
+//         res.status(500).json({ error: 'An error occurred while fetching the bookings', details: error.message });
+//     }
+// });
+
+
+website.get('/upcoming-bookings',isAdminAuthenticated,async (req, res) => {
+    // Ensure session save is done before proceeding
+    req.session.save(async (err) => {
+        if (err) {
+            console.error('Session save error:', err);
+            return res.redirect('/adminLogin'); // Handle session save error by redirecting
+        }
+        
+        console.log('Session confirmed saved:', req.session);
+        
+        try {
+            // Fetch all bookings from the database
+            const bookings = await Booking.find();
+
+            // Render the admin panel template and pass the bookings data
+            res.render('panel/Upcoming_Booking_Ad', {
+                bookings: bookings,
+                admin: {
+                    name: req.session.adminName,
+                    email: req.session.adminEmail,
+                    isSuperAdmin: req.session.isSuperAdmin
+                }
+            });
+
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+            // Render an error page or redirect with flash message
+            res.redirect('/admin/dashboard?error=failed_to_fetch_bookings');
+        }
+    });
 });
 
 
 // Route to delete a booking entry
-website.post('/delete-booking/:id', async (req, res) => {
+website.post('/delete-booking/:id',isAdminAuthenticated, async (req, res) => {
     try {
         const bookingId = req.params.id; // Get the booking ID from the URL
 
@@ -727,7 +697,6 @@ website.post('/delete-booking/:id', async (req, res) => {
         res.status(500).send('An error occurred while deleting the booking.');
     }
 });
-
 
 //  Test Series...... Gre
 website.get('/greOption', (req, res) => {
@@ -767,196 +736,196 @@ website.get('/gmatOption', (req, res) => {
     res.render("testPre/GMAT/GMat");
 });
 
-website.get('/gmatPractice', (req, res) => {    
+website.get('/gmatPractice', (req, res) => {
     res.render("testPre/GMAT/gmatPractice");
 });
 
-website.get('/gmatOnlines', (req, res) => {     
+website.get('/gmatOnlines', (req, res) => {
     res.render("testPre/GMAT/gmatOnline");
 });
 
-website.get('/gmatBook', (req, res) => {     
-    res.render("testPre/GMAT/gmatBooks");     
+website.get('/gmatBook', (req, res) => {
+    res.render("testPre/GMAT/gmatBooks");
 });
 
-website.get('/gmatExam', (req, res) => {     
+website.get('/gmatExam', (req, res) => {
     res.render("testPre/GMAT/gmatExams");
 });
 
-website.get('/GmatSyllabus', (req, res) => {     
+website.get('/GmatSyllabus', (req, res) => {
     res.render("testPre/GMAT/GmatSyllabus");
 });
 
-website.get('/gmatEligibity', (req, res) => {     
+website.get('/gmatEligibity', (req, res) => {
     res.render("testPre/GMAT/gmatEligibity");
 });
 
 
-website.get('/gmatCalculator', (req, res) => {     
+website.get('/gmatCalculator', (req, res) => {
     res.render("testPre/GMAT/gmatCalculator");
 });
 
 //  SAT
 
-website.get('/satPre', (req, res) => {     
+website.get('/satPre', (req, res) => {
     res.render("testPre/SAT/satPre");
 });
 
-website.get('/satPractice', (req, res) => {     
+website.get('/satPractice', (req, res) => {
     res.render("testPre/SAT/satPractice");
 });
 
-website.get('/satOnline', (req, res) => {     
+website.get('/satOnline', (req, res) => {
     res.render("testPre/SAT/satOnline");
 });
 
-website.get('/satRegistration', (req, res) => {     
+website.get('/satRegistration', (req, res) => {
     res.render("testPre/SAT/satRegistration");
 });
 
-website.get('/satPattern', (req, res) => {     
+website.get('/satPattern', (req, res) => {
     res.render("testPre/SAT/satPattern");
 });
 
 
-website.get('/satSyllabus', (req, res) => {     
+website.get('/satSyllabus', (req, res) => {
     res.render("testPre/SAT/satSyllabus");
 });
 
 
-website.get('/satEligibility', (req, res) => {     
+website.get('/satEligibility', (req, res) => {
     res.render("testPre/SAT/satEligibility");
 });
 
 
-website.get('/satDates', (req, res) => {     
+website.get('/satDates', (req, res) => {
     res.render("testPre/SAT/satDates");
 });
 
 
-website.get('/actpre', (req, res) => {     
+website.get('/actpre', (req, res) => {
     res.render("testPre/ACT/ActPre");
 });
 
 
-website.get('/actexam', (req, res) => {     
+website.get('/actexam', (req, res) => {
     res.render("testPre/ACT/ActExam");
 });
 
 
-website.get('/satvsact', (req, res) => {     
+website.get('/satvsact', (req, res) => {
     res.render("testPre/ACT/SatVsAct");
 });
 
 // IELTS...
 
 
-website.get('/ieltspre', (req, res) => {     
+website.get('/ieltspre', (req, res) => {
     res.render("testPre/IELTS/IELTSPre");
 });
 
 
-website.get('/ieltsOnline', (req, res) => {     
+website.get('/ieltsOnline', (req, res) => {
     res.render("testPre/IELTS/IELTSOnline");
 });
 
 
-website.get('/ieltsExam', (req, res) => {     
+website.get('/ieltsExam', (req, res) => {
     res.render("testPre/IELTS/IELTSExam");
 });
 
 
-website.get('/ieltsPattern', (req, res) => {     
+website.get('/ieltsPattern', (req, res) => {
     res.render("testPre/IELTS/IELTSPattern");
 });
 
 
-website.get('/ieltsBook', (req, res) => {     
+website.get('/ieltsBook', (req, res) => {
     res.render("testPre/IELTS/IELTSBook");
 });
 
 
-website.get('/ieltsPraTest', (req, res) => {     
+website.get('/ieltsPraTest', (req, res) => {
     res.render("testPre/IELTS/IELTSPracTest");
 });
 
 
-website.get('/ieltsSyllabus', (req, res) => {     
+website.get('/ieltsSyllabus', (req, res) => {
     res.render("testPre/IELTS/IELTSSyllabus");
 });
 
 
-website.get('/ieltsEligibility', (req, res) => {     
+website.get('/ieltsEligibility', (req, res) => {
     res.render("testPre/IELTS/IELTSEligibility");
 });
 
 // TOEFL
 
 
-website.get('/toeflPre', (req, res) => {     
+website.get('/toeflPre', (req, res) => {
     res.render("testPre/TOEFL/TOEFLPre");
 });
 
-website.get('/toeflPrep', (req, res) => {     
+website.get('/toeflPrep', (req, res) => {
     res.render("testPre/TOEFL/TOEFLPrep");
 });
 
-website.get('/toeflSyllabus', (req, res) => {     
+website.get('/toeflSyllabus', (req, res) => {
     res.render("testPre/TOEFL/TOEFLSyllabus");
 });
 
-website.get('/toeflEligibility', (req, res) => {     
+website.get('/toeflEligibility', (req, res) => {
     res.render("testPre/TOEFL/TOEFLEligibility");
 });
 
-website.get('/toeflPattern', (req, res) => {     
+website.get('/toeflPattern', (req, res) => {
     res.render("testPre/TOEFL/TOEFLPattern");
 });
 
 
-website.get('/toeflTestPre', (req, res) => {     
+website.get('/toeflTestPre', (req, res) => {
     res.render("testPre/TOEFL/TOEFLTestPrep");
 });
 
 
 // AP
 
-website.get('/apPre', (req, res) => {     
+website.get('/apPre', (req, res) => {
     res.render("testPre/AP/APPre");
 });
 
-website.get('/apExam', (req, res) => {     
+website.get('/apExam', (req, res) => {
     res.render("testPre/AP/APExam");
 });
 
 // PTE
 
-website.get('/ptePre', (req, res) => {     
+website.get('/ptePre', (req, res) => {
     res.render("testPre/PTE/PTEPre");
 });
 
-website.get('/pteSyllabus', (req, res) => {     
+website.get('/pteSyllabus', (req, res) => {
     res.render("testPre/PTE/PTESyllabus");
 });
 
 
-website.get('/pteEligibility', (req, res) => {     
+website.get('/pteEligibility', (req, res) => {
     res.render("testPre/PTE/PTEEligibility");
 });
 
 //  CBSE
 
-website.get('/10th', (req, res) => {     
+website.get('/10th', (req, res) => {
     res.render("testPre/CBSE/10th");
 });
 
 
-website.get('/11th', (req, res) => {     
+website.get('/11th', (req, res) => {
     res.render("testPre/CBSE/11th");
 });
 
 
-website.get('/12th', (req, res) => {     
+website.get('/12th', (req, res) => {
     res.render("testPre/CBSE/12th");
 });
 
@@ -1045,7 +1014,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all GreTest enquiries (protected)
-website.get('/greTest-enquiries', isAuthenticated, async (req, res) => {
+website.get('/greTest-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
         const greTestEnquiries = await GreTest.find(); // Fetch all GreTest enquiries
         res.render('panel/testpreAdmin/greAdmin', { greTestEnquiries }); // Pass the data to EJS
@@ -1059,7 +1028,7 @@ module.exports = website;
 
 
 // Route to delete a GreTest enquiry by ID
-website.post('/delete-greTest/:id', async (req, res) => {
+website.post('/delete-greTest/:id',isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1153,8 +1122,9 @@ function isAuthenticated(req, res, next) {
     }
 }
 
+
 // Route to fetch all GMAT enquiries (protected)
-website.get('/gmatTest-enquiries', isAuthenticated, async (req, res) => {
+website.get('/gmatTest-enquiries', isAdminAuthenticated , async (req, res) => {
     try {
         const gmatTestEnquiries = await GmatTest.find(); // Fetch all GMAT enquiries
         res.render('panel/testpreAdmin/gmatAdmin', { gmatTestEnquiries }); // Pass the data to EJS
@@ -1168,7 +1138,7 @@ module.exports = website;
 
 
 // Route to delete a GreTest enquiry by ID
-website.post('/delete-gmatTest/:id', async (req, res) => {
+website.post('/delete-gmatTest/:id',isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1263,9 +1233,9 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all GMAT enquiries (protected)
-website.get('/satTest-enquiries', isAuthenticated, async (req, res) => {
+website.get('/satTest-enquiries', isAdminAuthenticated , async (req, res) => {
     try {
-        const  satTestEnquiries = await satTest.find(); // Fetch all GMAT enquiries
+        const satTestEnquiries = await satTest.find(); // Fetch all GMAT enquiries
         res.render('panel/testpreAdmin/SatAdmin', { satTestEnquiries }); // Pass the data to EJS
     } catch (error) {
         console.error('Error fetching GMAT enquiries:', error);
@@ -1277,7 +1247,7 @@ module.exports = website;
 
 
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-satTest/:id', async (req, res) => {
+website.post('/delete-satTest/:id',isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1372,7 +1342,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all ACT enquiries (protected)
-website.get('/actTest-enquiries', isAuthenticated, async (req, res) => {
+website.get('/actTest-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
         const actTestEnquiries = await ActTest.find(); // Fetch all ACT enquiries
         res.render('panel/testpreAdmin/actAdmin', { actTestEnquiries }); // Pass the data to EJS
@@ -1386,7 +1356,7 @@ module.exports = website;
 
 
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-actTest/:id', async (req, res) => {
+website.post('/delete-actTest/:id', isAdminAuthenticated , async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1479,8 +1449,9 @@ function isAuthenticated(req, res, next) {
     }
 }
 
+
 // Route to fetch all IELTS enquiries (protected)
-website.get('/ieltsTest-enquiries', isAuthenticated, async (req, res) => {
+website.get('/ieltsTest-enquiries', isAdminAuthenticated , async (req, res) => {
     try {
         const ieltsTestEnquiries = await IeltsTest.find(); // Fetch all IELTS enquiries
         res.render('panel/testpreAdmin/ieltsAdmin', { ieltsTestEnquiries }); // Pass the data to EJS
@@ -1492,10 +1463,8 @@ website.get('/ieltsTest-enquiries', isAuthenticated, async (req, res) => {
 
 module.exports = website;
 
-
-
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-ieltsTest/:id', async (req, res) => {
+website.post('/delete-ieltsTest/:id', isAdminAuthenticated , async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1590,7 +1559,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all TOEFL enquiries (protected)
-website.get('/toeflTest-enquiries', isAuthenticated, async (req, res) => {
+website.get('/toeflTest-enquiries', isAdminAuthenticated , async (req, res) => {
     try {
         const toeflTestEnquiries = await ToeflTest.find(); // Fetch all TOEFL enquiries
         res.render('panel/testpreAdmin/toeflAdmin', { toeflTestEnquiries }); // Pass the data to EJS
@@ -1605,7 +1574,7 @@ module.exports = website;
 
 
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-toeflTest/:id', async (req, res) => {
+website.post('/delete-toeflTest/:id', isAdminAuthenticated , async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1621,10 +1590,10 @@ website.post('/delete-toeflTest/:id', async (req, res) => {
 });
 
 
-  // 7. AP Schema & Modal
+// 7. AP Schema & Modal
 
 
-  // Import mongoose for MongoDB interactions
+// Import mongoose for MongoDB interactions
 
 // Define the ACT schema
 const apSchema = new mongoose.Schema({
@@ -1703,7 +1672,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all ACT enquiries (protected)
-website.get('/apTest-enquiries', isAuthenticated, async (req, res) => {
+website.get('/apTest-enquiries', isAdminAuthenticated , async (req, res) => {
     try {
         const apTestEnquiries = await ApTest.find(); // Fetch all ACT enquiries
         res.render('panel/testpreAdmin/apAdmin', { apTestEnquiries }); // Pass the data to EJS
@@ -1717,7 +1686,7 @@ module.exports = website;
 
 
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-apTest/:id', async (req, res) => {
+website.post('/delete-apTest/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1812,7 +1781,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all CBSE enquiries (protected)
-website.get('/cbseTest-enquiries', isAuthenticated, async (req, res) => {
+website.get('/cbseTest-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
         const cbseTestEnquiries = await CbseTest.find(); // Fetch all CBSE enquiries
         res.render('panel/testpreAdmin/cbseAdmin', { cbseTestEnquiries }); // Pass the data to EJS
@@ -1827,7 +1796,7 @@ module.exports = website;
 
 
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-cbseTest/:id', async (req, res) => {
+website.post('/delete-cbseTest/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1925,7 +1894,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all PTE enquiries (protected)
-website.get('/pteTest-enquiries', isAuthenticated, async (req, res) => {
+website.get('/pteTest-enquiries', isAdminAuthenticated , async (req, res) => {
     try {
         const pteTestEnquiries = await PteTest.find(); // Fetch all PTE enquiries
         res.render('panel/testpreAdmin/pteAdmin', { pteTestEnquiries }); // Pass the data to EJS
@@ -1938,7 +1907,7 @@ website.get('/pteTest-enquiries', isAuthenticated, async (req, res) => {
 
 
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-pteTest/:id', async (req, res) => {
+website.post('/delete-pteTest/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -2034,7 +2003,7 @@ function isAuthenticated(req, res, next) {
 
 
 // Route to fetch all course enquiries (protected)
-website.get('/course-enquiries', isAuthenticated, async (req, res) => {
+website.get('/course-enquiries', isAdminAuthenticated , async (req, res) => {
     try {
         // Fetch all course enquiries from the database
         const courseEnquiries = await CourseEnquiry.find();
@@ -2049,7 +2018,7 @@ website.get('/course-enquiries', isAuthenticated, async (req, res) => {
 
 
 // Route to delete a CourseEnquiry by ID
-website.post('/delete-course-enquiry/:id', async (req, res) => {
+website.post('/delete-course-enquiry/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -2153,7 +2122,7 @@ website.get('/freeDemo', async (req, res) => {
 
 // Display Videos in Free Demo Page Admin
 
-website.get('/freeDemoAdmin', async (req, res) => {
+website.get('/freeDemoAdmin', isAdminAuthenticated , async (req, res) => {
     try {
         const videos = await Video.find();
         console.log('✅ Videos fetched for admin panel:', videos); // Debugging
@@ -2170,7 +2139,7 @@ website.get('/freeDemoAdmin', async (req, res) => {
 });
 
 // Route to delete a video by ID
-website.post('/delete-video/:id', async (req, res) => {
+website.post('/delete-video/:id', isAdminAuthenticated , async (req, res) => {
     try {
         const videoId = req.params.id; // Get the video ID from the URL
 
@@ -2202,59 +2171,264 @@ website.post('/delete-video/:id', async (req, res) => {
 
 // For Delete Free Deme Clases from 
 
-// User Schema
-const userSchema = new mongoose.Schema({
-    mobile: { type: String, required: true, unique: true }
-  });
-  const User = mongoose.model('User', userSchema);
-  
-  // Temporary OTP storage
-  const otpStore = {};
-  
-  // Routes
-  website.get('/', (req, res) => res.render('login'));
-  
-  website.post('/send-otp', async (req, res) => {
-    const { mobile } = req.body;
-    
+
+// Routes
+website.get('/login', (req, res) => {
+    res.redirect('/auth/login');
+});
+ 
+website.get('/auth/register', (req, res) => {
+    res.render('auth/register', { errorMessage: null });
+});
+website.post('/auth/register', async(req,res)=>{
+    const {name,email,password}= req.body;
+    const user = await userModel.findOne({email});
+    if(user){
+        res.send('already exist');
+    }
+    const hashedPassword = await bcrypt.hash(password,10);
+    const newuser = await userModel.create({
+        name,
+        email,
+        password:hashedPassword
+    })
+    const token = jwt.sign({email},'secret');
+    res.cookie('token',token);
+    res.redirect('/auth/login');
+})
+
+
+
+website.get('/auth/login', (req, res) => {
+    res.render('auth/login', { errorMessage: null });
+});
+
+website.post('/auth/login', async (req, res) => {
     try {
-      // Check if user exists
-      const user = await User.findOne({ mobile });
-      if (!user) return res.send('Mobile not registered!');
-  
-      // Generate OTP
-      const otp = Math.floor(1000 + Math.random() * 9000);
-      otpStore[mobile] = otp;
-      console.log(`OTP for ${mobile}: ${otp}`); // Replace with SMS service
-  
-      req.session.mobile = mobile;
-      res.render('login/verify');
+        const { email, password } = req.body;
+
+        // Validate input
+        if (!email || !password) {
+            return ( {
+                errorMessage: 'Please provide both email and password'
+            });
+        }
+
+        // Find user (case insensitive);
+        const user = await userModel.findOne({ email });
+
+        // console.log(user, "Hello");
+
+        if (!user) {
+            return ( {
+                errorMessage: 'Invalid credentials'
+            });
+        }
+      const isMatch = bcrypt.compare(password,user.password);
+      if(isMatch){
+        res.redirect('/profile');
+      }
+        if(user.password != password){
+            return res.send(`<script>
+                    alert('Invalid credentials');
+                    window.location.href = '/auth/login';
+                </script>
+            `);
+        }
+
+        return res.send(`<script>
+                alert('Login successful!');
+                // window.location.href = '/dashboard';
+            </script>
+        `);
+
     } catch (err) {
-      res.send('Server error');
+        console.error('Login error:', err);
+        return ( {
+            errorMessage: 'An error occurred. Please try again.'
+        });
     }
-  });
-  
-  website.post('/verify', (req, res) => {
-    const { otp } = req.body;
-    const mobile = req.session.mobile;
-  
-    if (otpStore[mobile] && otpStore[mobile] == otp) {
-      delete otpStore[mobile];
-      res.send('<h1>Login Successful!</h1>');
-    } else {
-      res.send('Invalid OTP! <a href="/">Try again</a>');
+});
+
+website.get('/dashboard', (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/auth/login');
     }
-  });
+    res.send(`
+        <h1>Welcome, ${req.session.user.email}</h1>
+        <a href="/logout">Logout</a>
+    `);
+});
 
+website.get('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            console.error('Logout error:', err);
+            return res.redirect('/dashboard');
+        }
+        res.clearCookie('connect.sid');
+        res.redirect('/auth/login');
+    });
+});
 
-  
-website.get('/login', (req, res) => {     
-    res.render("login/login");
+// Create test user (remove in production)
+website.get('/create-test-user', async (req, res) => {
+    try {
+
+        const testEmail = 'rajpatil484950@gmail.com';
+        const testPassword = 'rajaryan@123';
+
+        // Delete if exists
+        await User.deleteOne({ email: testEmail });
+
+        // Create new user (password will be auto-hashed)
+        const user = new User({
+            email: testEmail,
+            password: testPassword
+        });
+
+        await user.save();
+
+        res.send(`
+            <h1>Test User Created</h1>
+            <p>Email: ${testEmail}</p>
+            <p>Password: ${testPassword}</p>
+            <a href="/auth/login">Go to Login</a>
+        `);
+    } catch (err) {
+        console.error('Error creating test user:', err);
+        res.status(500).send('Error creating test user');
+    }
 });
 
 
-website.get('/verify', (req, res) => {     
-    res.render("login/verify");
+//  Razorpay Gateway
+
+
+// Payment Schema
+const paymentSchema = new mongoose.Schema({
+    name: String,
+    email: String,
+    phone: String,
+    course: String,
+    amount: Number,
+    currency: String,
+    razorpay_payment_id: String,
+    razorpay_order_id: String,
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Payment = mongoose.model('Payment', paymentSchema);
+
+// Initialize Razorpay
+const razorpay = new Razorpay({
+    key_id: 'rzp_test_CUrnOL4cJ4cUpK',
+    key_secret: 'HSjX6dBSfLTIhSHrXtcymK9T'
+});
+
+// Routes
+website.get('/paymentgateway_index', (req, res) => {
+    res.render('paymentgateway/index', {
+        razorpayKey: 'rzp_test_CUrnOL4cJ4cUpK' // Pass Razorpay key to the view
+    });
+});
+
+website.post('/create-order', async (req, res) => {
+    try {
+        
+        const { amount, course, name, email, phone } = req.body;
+        
+        const options = {
+            amount: 10000 * 100, // Convert to paise
+            currency: 'INR',
+            receipt: 'order_' + Math.random().toString(36).substr(2, 9)
+        };
+
+        const order = await razorpay.orders.create(options);
+        
+        // Create a temporary payment record
+        const payment = new Payment({
+            name,
+            email,
+            phone,
+            course,
+            amount,
+            currency: 'INR',
+            razorpay_order_id: order.id
+        });
+        await payment.save();
+
+        res.json({
+            id: order.id,
+            amount: order.amount,
+            orderId: payment._id
+        });
+    } catch (error) {
+        console.error('Razorpay error:', error);
+        res.status(500).json({ error: 'Error creating order' });
+    }
+});
+
+website.get('/payment-success', async (req, res) => {
+    try {
+        const { payment_id, order_id } = req.query;
+        // Update payment record
+        console.log(req.query)
+        const payment = await Payment.findOneAndUpdate({razorpay_order_id : order_id}, {
+            razorpay_payment_id: payment_id,
+            status: 'completed'
+        }, { new: true });
+        if (!payment) {
+            return res.status(404).send('Payment record not found');
+        }
+        console.log(payment)
+        res.render('paymentgateway/payment-success', {
+            name: payment.name,
+            email: payment.email,
+            phone: payment.phone,
+            course: payment.course,
+            amount: payment.amount,
+            currency: payment.currency,
+            razorpay_payment_id: payment.razorpay_payment_id,
+            razorpay_order_id: payment.razorpay_order_id
+        });
+    } catch (error) {
+        console.error('Error saving payment:', error);
+        res.status(500).send('Error processing payment');
+    }
+});
+
+
+//  Payment Detailes display in the Back-end
+
+
+website.get('/paymentShow', isAdminAuthenticated , async (req, res) => {
+    try {
+        const payments = await Payment.find().sort({ createdAt: -1 });
+        res.render('panel/paymentDetailesAd.ejs', { 
+            paymentDetails: payments // Match this with EJS
+        });
+    } catch (error) {
+        console.error('Error fetching payments:', error);
+        res.status(500).send('Error loading payment details');
+    }
+});
+
+
+// Route to delete a payment by ID
+website.post('/delete-payment/:id', isAdminAuthenticated, async (req, res) => {
+    try {
+        const paymentId = req.params.id;
+
+        // Delete the payment from the database
+        await Payment.findByIdAndDelete(paymentId);
+
+        // Redirect back to the payment details page
+        res.redirect('/paymentShow');
+    } catch (error) {
+        console.error('Error deleting payment:', error);
+        res.status(500).send('An error occurred while deleting the payment.');
+    }
 });
 
 // Start the server on port 3000

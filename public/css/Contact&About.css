@@ -36,15 +36,19 @@ body {
 .hero-section {
     background: linear-gradient(rgba(43, 45, 66, 0.9), rgba(43, 45, 66, 0.9)),
             url('https://source.unsplash.com/1600x400/?university,education') center/cover;
-    padding: 4rem 2rem;
+    padding: 6.4rem 2rem;
     color: var(--white);
     position: relative;
 }
 
 .hero-content {
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 25px auto;
     animation: fadeInDown 0.5s ease;
+    display: flex;
+    flex-direction: column;
+    justify-items: center;
+    align-items: center;
 }
 
 .hero-content h1 {
@@ -1064,6 +1068,7 @@ footer {
     .content-wrapper {
         grid-template-columns: 1fr;
     }
+    
 
     .content-right {
         order: -1;
@@ -1077,6 +1082,11 @@ footer {
 @media (max-width: 768px) {
     .hero-section {
         padding: 3rem 1rem;
+    }
+
+
+    .hero-content {
+        text-align: center;
     }
 
     .hero-content h1 {
@@ -1140,6 +1150,8 @@ footer {
     .contact-grid {
         grid-template-columns: 1fr;
     }
+
+
 
     .contact-info {
         grid-template-columns: 1fr;

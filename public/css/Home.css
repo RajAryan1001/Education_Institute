@@ -1,10 +1,10 @@
 
 /* Base Styles */
 :root {
---primary-color: #4361ee;
---primary-dark: #3a56d4;
---secondary-color: #ff6b6b;
---secondary-dark: #ff5252;
+--primary-color:#3F4154;
+--primary-dark: #3f4154 ;
+--secondary-color: #ff6b35;
+--secondary-dark: #ff6b35;
 --accent-color: #4cc9f0;
 --text-color: #333;
 --text-light: #666;
@@ -14,12 +14,11 @@
 --border-color: #e0e0e0;
 --success-color: #4caf50;
 --warning-color: #ff9800;
---error-color: #f44336;
+--error-color: #ff6b35;
 --border-radius: 8px;
 --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 --transition: all 0.3s ease;
 }
-
 * {
 margin: 0;
 padding: 0;

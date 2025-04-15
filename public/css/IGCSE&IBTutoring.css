@@ -30,7 +30,7 @@
     .hero-section {
       background: linear-gradient(rgba(43, 45, 66, 0.9), rgba(43, 45, 66, 0.9)),
                   url('https://source.unsplash.com/1600x400/?university,education') center/cover;
-      padding: 4rem 2rem;
+      padding: 6.4rem 2rem;
       color: var(--white);
       position: relative;
     }
@@ -39,6 +39,8 @@
       max-width: 1200px;
       margin: 0 auto;
       animation: fadeInDown 0.5s ease;
+      display: flex;
+      flex-direction: column;
     }
 
     .hero-content h1 {
@@ -308,6 +310,9 @@
           padding: 2rem 1rem;
       }
       
+      .hero-content{
+        margin-top: 50px;
+    }
       .hero-content h1 {
           font-size: 1.75rem;
       }

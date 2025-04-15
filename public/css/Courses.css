@@ -3,8 +3,8 @@
 :root {
 --primary-color: #4361ee;
 --primary-dark: #3a56d4;
---secondary-color: #ff6b6b;
---secondary-dark: #ff5252;
+--secondary-color: #ff6b35;
+--secondary-dark: #ff6b35;
 --accent-color: #4cc9f0;
 --text-color: #333;
 --text-light: #666;
@@ -14,7 +14,7 @@
 --border-color: #e0e0e0;
 --success-color: #4caf50;
 --warning-color: #ff9800;
---error-color: #f44336;
+--error-color: #ff6b35;
 --border-radius: 8px;
 --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 --transition: all 0.3s ease;
@@ -296,6 +296,62 @@ color: var(--text-light);
 display: flex;
 gap: 15px;
 justify-content: center;
+}
+
+
+
+.filter-box {
+    flex: 1;
+    min-width: 200px;
+    margin-left: 50px;
+}
+
+.filter-box select {
+    width: 100%;
+    padding: 12px 15px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-family: "Poppins", sans-serif;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px;
+}
+
+.filter-box select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.3);
+}
+
+.no-results-message {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin: 30px auto;
+    max-width: 500px;
+}
+
+.no-results-message i {
+    font-size: 3rem;
+    color: var(--text-light);
+    margin-bottom: 15px;
+}
+
+.no-results-message h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.no-results-message p {
+    color: var(--text-light);
 }
 
 /* Courses Section Styles */
@@ -837,3 +893,5 @@ font-size: 1.2rem;
 font-size: 1.8rem;
 }
 }
+
+

@@ -2432,6 +2432,5 @@ website.post('/delete-payment/:id', isAdminAuthenticated, async (req, res) => {
 });
 
 // Start the server on port 3000
-website.listen(4000, () => {
-    console.log('Server running at http://localhost:4000');
-});
+const PORT = process.env.PORT || 3000;
+website.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -258,63 +258,6 @@ website.post('/admin/resend-otp', async (req, res) => {
         });
     }
 });
-// Verify OTP and login
-// website.post('/admin/verify-otp', async (req, res) => {
-//     const { email, otp } = req.body;
-
-//     try {
-//         // Find admin
-//         const admin = await Admin.findOne({ email });
-//         if (!admin) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'No admin found with this email'
-//             });
-//         }
-
-//         // Verify OTP (this will clear the OTP regardless of match)
-//         const isValidOTP = admin.verifyOTP(otp);
-//         if (!isValidOTP) {
-//             await admin.save(); // Save to clear the invalid OTP
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Invalid or expired OTP'
-//             });
-//         }
-
-//         // Save admin to clear OTP and update last login
-//         admin.lastLogin = new Date();
-//         await admin.save();
-
-//         // Create session
-        
-
-//         req.session.isAdminAuthenticated = true;
-//         req.session.adminId = admin._id;
-//         req.session.adminEmail = admin.email;
-//         req.session.adminName = admin.name;
-//         req.session.isSuperAdmin = admin.isSuperAdmin;
-
-//         // res.json({
-//         //     success: true,
-//         //     message: 'OTP verified successfully',
-//         //     admin: {
-//         //         name: admin.name,
-//         //         email: admin.email,
-//         //         isSuperAdmin: admin.isSuperAdmin
-//         //     }
-//         // });
-
-//         res.redirect('/igcse-ib-enquiries');
-
-//     } catch (error) {
-//         console.error('Error in verify-otp:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Internal server error'
-//         });
-//     }
-// });
 
 website.post('/admin/verify-otp', async (req, res) => {
     const { email, otp } = req.body;
@@ -630,21 +573,6 @@ website.post('/submit-booking', async (req, res) => {
         res.status(500).send(`An error occurred while submitting the form: ${error.message}`);
     }
 });
-
-
-// Route to fetch all bookings (protected)
-// website.get('/upcoming-bookings', isAuthenticated, async (req, res) => {
-//     try {
-//         // Fetch all bookings from the database
-//         const bookings = await Booking.find();
-
-//         // Render the admin panel template and pass the bookings data
-//         res.render('panel/Upcoming_Booking_Ad', { bookings: bookings });
-//     } catch (error) {
-//         console.error('Error fetching bookings:', error);
-//         res.status(500).json({ error: 'An error occurred while fetching the bookings', details: error.message });
-//     }
-// });
 
 
 website.get('/upcoming-bookings',isAdminAuthenticated,async (req, res) => {

@@ -3,18 +3,19 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const jwt = require('jsonwebtoken');
+const mongoose=require('mongoose');
 const cookieParser=require('cookie-parser');
 const website = express();
 const multer = require('multer')
 const path = require('path');
 const fs = require('fs');     // VIdeo
 const userModel=require('./models/user.model')
-const mongoose= require('mongoose');
 const Admin = require('./models/admin');
 const OTP = require('./models/otp');
 const { sendOTPEmail } = require('./utils/emailService');
 const {  isSuperAdmin } = require('./utils/authMiddleware');
 const { render } = require('ejs');
+require('./models/config/db');
 
 const Razorpay = require('razorpay');
 
@@ -39,7 +40,8 @@ website.use(cookieParser());
 
 
 
-mongoose.connect("mongodb://localhost:27017/Education");
+
+// mongoose.connect("mongodb://localhost:27017/Education");
 
 const MongoStore = require('connect-mongo');
 
@@ -88,10 +90,6 @@ website.get('/check', async (req, res) => {
         
 });
 
-
-mongoose.connect('mongodb://localhost:27017/Education').then(()=> {
-    console.log(`db connect`)
-})
 
 // adminlogin and session
 

@@ -22,6 +22,6 @@ const otpSchema = new mongoose.Schema({
 });
 
 // Create index for automatic expiration
-otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+// otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model('OTP', otpSchema);

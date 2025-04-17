@@ -261,66 +261,53 @@ website.post('/admin/resend-otp', async (req, res) => {
 
 website.post('/admin/verify-otp', async (req, res) => {
     const { email, otp } = req.body;
-
+  
     try {
-        const admin = await Admin.findOne({ email });
-        if (!admin) {
-            req.flash('error', 'No admin found with this email');
-            return res.redirect('/adminLogin');
-        }
-
-        const isValidOTP = admin.verifyOTP(otp);
-        if (!isValidOTP) {
-            await admin.save(); // Assuming it stores OTP attempts
-            req.flash('error', 'Invalid or expired OTP');
-            return res.redirect('/adminLogin');
-        }
-
-        admin.lastLogin = new Date();
+      const admin = await Admin.findOne({ email });
+      if (!admin) {
+        req.flash('error', 'No admin found with this email');
+        return res.redirect('/adminLogin');
+      }
+  
+      const isValidOTP = admin.verifyOTP(otp);
+      if (!isValidOTP) {
         await admin.save();
-
-        // Set session data
-        req.session.isAdminAuthenticated = true;
-        req.session.adminId = admin._id;
-        req.session.adminEmail = admin.email;
-        req.session.adminName = admin.name;
-        req.session.isSuperAdmin = admin.isSuperAdmin;
-
-        // Save session before continuing
-        await new Promise((resolve, reject) => {
-            req.session.save(err => {
-                if (err) {
-                    console.error('Session save error:', err);
-                    req.flash('error', 'Session error. Please try again.');
-                    return reject(err);
-                }
-                console.log('Session saved to store with ID:', req.sessionID);
-                resolve();
-            });
+        req.flash('error', 'Invalid or expired OTP');
+        return res.redirect('/adminLogin');
+      }
+  
+      admin.lastLogin = new Date();
+      await admin.save();
+  
+      // ✅ Store data in session
+      req.session.isAdminAuthenticated = true;
+      req.session.adminId = admin._id;
+      req.session.adminEmail = admin.email;
+      req.session.adminName = admin.name;
+      req.session.isSuperAdmin = admin.isSuperAdmin;
+  
+      // ✅ Ensure session is saved before redirect
+      await new Promise((resolve, reject) => {
+        req.session.save(err => {
+          if (err) {
+            console.error('Session save error:', err);
+            return reject(err);
+          }
+          console.log('✅ Session saved with ID:', req.sessionID);
+          console.log('✅ Session data:', req.session);
+          resolve();
         });
-
-        // Ensure Mongoose is connected before accessing DB directly
-        if (mongoose.connection.readyState !== 1) {
-            console.warn('MongoDB not connected, skipping direct session store access.');
-        } else {
-            try {
-                const sessionData = await mongoose.connection.db.collection('sessions')
-                    .findOne({ _id: req.sessionID });
-
-                console.log('Session in database:', sessionData);
-            } catch (dbErr) {
-                console.error('Failed to read session from DB:', dbErr.message);
-            }
-        }
-
-        res.redirect('/igcse-ib-enquiries');
-
+      });
+  
+      // ✅ No need to query MongoDB manually for session
+      res.redirect('/igcse-ib-enquiries');
+  
     } catch (error) {
-        console.error('Error in /admin/verify-otp:', error);
-        req.flash('error', 'Something went wrong. Please try again.');
-        res.redirect('/adminLogin');
+      console.error('Error in verify-otp:', error);
+      res.redirect('/adminLogin');
     }
-});
+  });
+  
 
 
 website.use(async (req, res, next) => {

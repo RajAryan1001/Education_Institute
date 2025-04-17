@@ -45,17 +45,6 @@ website.use(cookieParser());
 
 const MongoStore = require('connect-mongo');
 
-const sessionStore = MongoStore.create({
-    mongoUrl: "mongodb://localhost:27017/Education",
-    collectionName: 'sessions',
-    ttl: 14 * 24 * 60 * 60
-});
-
-sessionStore.on('error', (error) => {
-    console.error('Session store error:', error);
-});
-
-
 // // Session configuration
 website.use(session({
     secret: process.env.SESSION_SECRET || 'session-secret-key',
@@ -279,34 +268,35 @@ website.post('/admin/verify-otp', async (req, res) => {
       admin.lastLogin = new Date();
       await admin.save();
   
-      // ✅ Store data in session
+      // Set session values
       req.session.isAdminAuthenticated = true;
       req.session.adminId = admin._id;
       req.session.adminEmail = admin.email;
       req.session.adminName = admin.name;
       req.session.isSuperAdmin = admin.isSuperAdmin;
   
-      // ✅ Ensure session is saved before redirect
+      // Save session
       await new Promise((resolve, reject) => {
         req.session.save(err => {
           if (err) {
-            console.error('Session save error:', err);
+            console.error('❌ Session save error:', err);
             return reject(err);
           }
-          console.log('✅ Session saved with ID:', req.sessionID);
-          console.log('✅ Session data:', req.session);
+          console.log('✅ Session saved successfully. Session ID:', req.sessionID);
           resolve();
         });
       });
   
-      // ✅ No need to query MongoDB manually for session
-      res.redirect('/igcse-ib-enquiries');
+      // ✅ Instead of checking DB, log from session directly
+      console.log('✅ Session contents:', req.session);
   
+      return res.redirect('/igcse-ib-enquiries');
     } catch (error) {
-      console.error('Error in verify-otp:', error);
-      res.redirect('/adminLogin');
+      console.error('❌ Error in verify-otp:', error);
+      return res.redirect('/adminLogin');
     }
   });
+  
   
 
 

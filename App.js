@@ -3,17 +3,17 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const jwt = require('jsonwebtoken');
-const mongoose=require('mongoose');
-const cookieParser=require('cookie-parser');
+const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 const website = express();
 const multer = require('multer')
 const path = require('path');
 const fs = require('fs');     // VIdeo
-const userModel=require('./models/user.model')
+const userModel = require('./models/user.model')
 const Admin = require('./models/admin');
 const OTP = require('./models/otp');
 const { sendOTPEmail } = require('./utils/emailService');
-const {  isSuperAdmin } = require('./utils/authMiddleware');
+const { isSuperAdmin } = require('./utils/authMiddleware');
 const { render } = require('ejs');
 require('./models/config/db');
 
@@ -62,24 +62,24 @@ website.use(session({
     resave: false,  // Important: should be false
     saveUninitialized: false,  // Important: should be false
     store: MongoStore.create({
-      mongoUrl: "mongodb://localhost:27017/Education",
-      collectionName: 'sessions',
-      ttl: 14 * 24 * 60 * 60, // 14 days
-      autoRemove: 'interval',
-      autoRemoveInterval: 60, // Remove expired sessions every 60 minutes
-      touchAfter: 24 * 3600 // Time period in seconds
+        mongoUrl: "mongodb://localhost:27017/Education",
+        collectionName: 'sessions',
+        ttl: 14 * 24 * 60 * 60, // 14 days
+        autoRemove: 'interval',
+        autoRemoveInterval: 60, // Remove expired sessions every 60 minutes
+        touchAfter: 24 * 3600 // Time period in seconds
     }),
-    cookie: { 
-      secure: false, // Set to false in development, true in production
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax' // Use 'none' in production with secure: true
+    cookie: {
+        secure: false, // Set to false in development, true in production
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'lax' // Use 'none' in production with secure: true
     }
-  }));
+}));
 
 
 const isAdminAuthenticated = async (req, res, next) => {
-    
+
     if (req.session.isAdminAuthenticated) return next();
     res.redirect('/adminLogin');
 };
@@ -87,15 +87,15 @@ const isAdminAuthenticated = async (req, res, next) => {
 
 website.get('/check', async (req, res) => {
     console.log(req.session);
-        
+
 });
 
 
 // adminlogin and session
 
-website.get('/adminLogin',async(req,res)=>{
+website.get('/adminLogin', async (req, res) => {
 
-  
+
     res.render('auth/login');
 })
 
@@ -193,7 +193,7 @@ website.post('/admin/send-otp', async (req, res) => {
             });
         }
 
-        res.render('auth/otp', { 
+        res.render('auth/otp', {
             title: 'Enter OTP',
             email: email,
             hideHeader: true,
@@ -239,7 +239,7 @@ website.post('/admin/resend-otp', async (req, res) => {
         }
 
         // Return the same response format as send-otp
-        res.render('auth/otp', { 
+        res.render('auth/otp', {
             title: 'Enter OTP',
             email: email,
             hideHeader: true,
@@ -261,70 +261,81 @@ website.post('/admin/resend-otp', async (req, res) => {
 
 website.post('/admin/verify-otp', async (req, res) => {
     const { email, otp } = req.body;
-  
-    try {
-      const admin = await Admin.findOne({ email });
-      if (!admin) {
-        req.flash('error', 'No admin found with this email');
-        return res.redirect('/adminLogin');
-      }
-  
-      const isValidOTP = admin.verifyOTP(otp);
-      if (!isValidOTP) {
-        await admin.save();
-        req.flash('error', 'Invalid or expired OTP');
-        return res.redirect('/adminLogin');
-      }
-  
-      admin.lastLogin = new Date();
-      await admin.save();
-  
-      // Set session data
-      req.session.isAdminAuthenticated = true;
-      req.session.adminId = admin._id;
-      req.session.adminEmail = admin.email;
-      req.session.adminName = admin.name;
-      req.session.isSuperAdmin = admin.isSuperAdmin;
-  
-      // Force immediate save and wait for confirmation
-      await new Promise((resolve, reject) => {
-        req.session.save(err => {
-          if (err) {
-            console.error('Session save error:', err);
-            return reject(err);
-          }
-          console.log('Session saved to store with ID:', req.sessionID);
-          resolve();
-        });
-      });
-  
-      // Verify the session was actually saved
-      const sessionData = await mongoose.connection.db.collection('sessions')
-        .findOne({ _id: req.sessionID });
-      
-      console.log('Session in database:', sessionData);
-  
-      res.redirect('/igcse-ib-enquiries');
-  
-    } catch (error) {
-      console.error('Error in verify-otp:', error);
-      res.redirect('/adminLogin');
-    }
-  });
 
-  website.use(async (req, res, next) => {
+    try {
+        const admin = await Admin.findOne({ email });
+        if (!admin) {
+            req.flash('error', 'No admin found with this email');
+            return res.redirect('/adminLogin');
+        }
+
+        const isValidOTP = admin.verifyOTP(otp);
+        if (!isValidOTP) {
+            await admin.save(); // Assuming it stores OTP attempts
+            req.flash('error', 'Invalid or expired OTP');
+            return res.redirect('/adminLogin');
+        }
+
+        admin.lastLogin = new Date();
+        await admin.save();
+
+        // Set session data
+        req.session.isAdminAuthenticated = true;
+        req.session.adminId = admin._id;
+        req.session.adminEmail = admin.email;
+        req.session.adminName = admin.name;
+        req.session.isSuperAdmin = admin.isSuperAdmin;
+
+        // Save session before continuing
+        await new Promise((resolve, reject) => {
+            req.session.save(err => {
+                if (err) {
+                    console.error('Session save error:', err);
+                    req.flash('error', 'Session error. Please try again.');
+                    return reject(err);
+                }
+                console.log('Session saved to store with ID:', req.sessionID);
+                resolve();
+            });
+        });
+
+        // Ensure Mongoose is connected before accessing DB directly
+        if (mongoose.connection.readyState !== 1) {
+            console.warn('MongoDB not connected, skipping direct session store access.');
+        } else {
+            try {
+                const sessionData = await mongoose.connection.db.collection('sessions')
+                    .findOne({ _id: req.sessionID });
+
+                console.log('Session in database:', sessionData);
+            } catch (dbErr) {
+                console.error('Failed to read session from DB:', dbErr.message);
+            }
+        }
+
+        res.redirect('/igcse-ib-enquiries');
+
+    } catch (error) {
+        console.error('Error in /admin/verify-otp:', error);
+        req.flash('error', 'Something went wrong. Please try again.');
+        res.redirect('/adminLogin');
+    }
+});
+
+
+website.use(async (req, res, next) => {
     console.log('Current session ID:', req.sessionID);
     console.log('Session data:', req.session);
-    
+
     // Verify session exists in database
     if (req.sessionID) {
-      const sessionData = await mongoose.connection.db.collection('sessions')
-        .findOne({ _id: req.sessionID });
-      console.log('Database session:', sessionData);
+        const sessionData = await mongoose.connection.db.collection('sessions')
+            .findOne({ _id: req.sessionID });
+        console.log('Database session:', sessionData);
     }
-    
+
     next();
-  });
+});
 
 // Admin logout
 website.get('/admin/logout', (req, res) => {
@@ -352,16 +363,16 @@ website.get('/courses', (req, res) => {
 });
 
 
-const authLogin=(req,res,next)=>{
+const authLogin = (req, res, next) => {
 
     const token = req.cookies.token;
-    if(!token){
+    if (!token) {
         res.redirect('/auth/login');
     }
-    const decoded = jwt.verify(token,'secret');
+    const decoded = jwt.verify(token, 'secret');
     req.user = decoded;
     next();
-    
+
 }
 
 website.get('/igcse&ibt', (req, res) => {
@@ -429,7 +440,7 @@ website.post('/submit-igcse-ib-tutoring', async (req, res) => {
         if (existingEnquiry) {
             return res.status(400).send('An enquiry with this email or mobile already exists.');
         }
-        
+
         // Create a new enquiry object
         const newIGCSEIBTutoringEnquiry = new IGCSEIBTutoring({
             firstName,
@@ -575,16 +586,16 @@ website.post('/submit-booking', async (req, res) => {
 });
 
 
-website.get('/upcoming-bookings',isAdminAuthenticated,async (req, res) => {
+website.get('/upcoming-bookings', isAdminAuthenticated, async (req, res) => {
     // Ensure session save is done before proceeding
     req.session.save(async (err) => {
         if (err) {
             console.error('Session save error:', err);
             return res.redirect('/adminLogin'); // Handle session save error by redirecting
         }
-        
+
         console.log('Session confirmed saved:', req.session);
-        
+
         try {
             // Fetch all bookings from the database
             const bookings = await Booking.find();
@@ -609,7 +620,7 @@ website.get('/upcoming-bookings',isAdminAuthenticated,async (req, res) => {
 
 
 // Route to delete a booking entry
-website.post('/delete-booking/:id',isAdminAuthenticated, async (req, res) => {
+website.post('/delete-booking/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const bookingId = req.params.id; // Get the booking ID from the URL
 
@@ -954,7 +965,7 @@ module.exports = website;
 
 
 // Route to delete a GreTest enquiry by ID
-website.post('/delete-greTest/:id',isAdminAuthenticated, async (req, res) => {
+website.post('/delete-greTest/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1050,7 +1061,7 @@ function isAuthenticated(req, res, next) {
 
 
 // Route to fetch all GMAT enquiries (protected)
-website.get('/gmatTest-enquiries', isAdminAuthenticated , async (req, res) => {
+website.get('/gmatTest-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
         const gmatTestEnquiries = await GmatTest.find(); // Fetch all GMAT enquiries
         res.render('panel/testpreAdmin/gmatAdmin', { gmatTestEnquiries }); // Pass the data to EJS
@@ -1064,7 +1075,7 @@ module.exports = website;
 
 
 // Route to delete a GreTest enquiry by ID
-website.post('/delete-gmatTest/:id',isAdminAuthenticated, async (req, res) => {
+website.post('/delete-gmatTest/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1159,7 +1170,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all GMAT enquiries (protected)
-website.get('/satTest-enquiries', isAdminAuthenticated , async (req, res) => {
+website.get('/satTest-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
         const satTestEnquiries = await satTest.find(); // Fetch all GMAT enquiries
         res.render('panel/testpreAdmin/SatAdmin', { satTestEnquiries }); // Pass the data to EJS
@@ -1173,7 +1184,7 @@ module.exports = website;
 
 
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-satTest/:id',isAdminAuthenticated, async (req, res) => {
+website.post('/delete-satTest/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1282,7 +1293,7 @@ module.exports = website;
 
 
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-actTest/:id', isAdminAuthenticated , async (req, res) => {
+website.post('/delete-actTest/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1377,7 +1388,7 @@ function isAuthenticated(req, res, next) {
 
 
 // Route to fetch all IELTS enquiries (protected)
-website.get('/ieltsTest-enquiries', isAdminAuthenticated , async (req, res) => {
+website.get('/ieltsTest-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
         const ieltsTestEnquiries = await IeltsTest.find(); // Fetch all IELTS enquiries
         res.render('panel/testpreAdmin/ieltsAdmin', { ieltsTestEnquiries }); // Pass the data to EJS
@@ -1390,7 +1401,7 @@ website.get('/ieltsTest-enquiries', isAdminAuthenticated , async (req, res) => {
 module.exports = website;
 
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-ieltsTest/:id', isAdminAuthenticated , async (req, res) => {
+website.post('/delete-ieltsTest/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1485,7 +1496,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all TOEFL enquiries (protected)
-website.get('/toeflTest-enquiries', isAdminAuthenticated , async (req, res) => {
+website.get('/toeflTest-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
         const toeflTestEnquiries = await ToeflTest.find(); // Fetch all TOEFL enquiries
         res.render('panel/testpreAdmin/toeflAdmin', { toeflTestEnquiries }); // Pass the data to EJS
@@ -1500,7 +1511,7 @@ module.exports = website;
 
 
 // Route to delete a SATTest enquiry by ID
-website.post('/delete-toeflTest/:id', isAdminAuthenticated , async (req, res) => {
+website.post('/delete-toeflTest/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const enquiryId = req.params.id; // Get the ID from the URL
 
@@ -1598,7 +1609,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all ACT enquiries (protected)
-website.get('/apTest-enquiries', isAdminAuthenticated , async (req, res) => {
+website.get('/apTest-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
         const apTestEnquiries = await ApTest.find(); // Fetch all ACT enquiries
         res.render('panel/testpreAdmin/apAdmin', { apTestEnquiries }); // Pass the data to EJS
@@ -1820,7 +1831,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // Route to fetch all PTE enquiries (protected)
-website.get('/pteTest-enquiries', isAdminAuthenticated , async (req, res) => {
+website.get('/pteTest-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
         const pteTestEnquiries = await PteTest.find(); // Fetch all PTE enquiries
         res.render('panel/testpreAdmin/pteAdmin', { pteTestEnquiries }); // Pass the data to EJS
@@ -1929,7 +1940,7 @@ function isAuthenticated(req, res, next) {
 
 
 // Route to fetch all course enquiries (protected)
-website.get('/course-enquiries', isAdminAuthenticated , async (req, res) => {
+website.get('/course-enquiries', isAdminAuthenticated, async (req, res) => {
     try {
         // Fetch all course enquiries from the database
         const courseEnquiries = await CourseEnquiry.find();
@@ -2048,7 +2059,7 @@ website.get('/freeDemo', async (req, res) => {
 
 // Display Videos in Free Demo Page Admin
 
-website.get('/freeDemoAdmin', isAdminAuthenticated , async (req, res) => {
+website.get('/freeDemoAdmin', isAdminAuthenticated, async (req, res) => {
     try {
         const videos = await Video.find();
         console.log('✅ Videos fetched for admin panel:', videos); // Debugging
@@ -2065,7 +2076,7 @@ website.get('/freeDemoAdmin', isAdminAuthenticated , async (req, res) => {
 });
 
 // Route to delete a video by ID
-website.post('/delete-video/:id', isAdminAuthenticated , async (req, res) => {
+website.post('/delete-video/:id', isAdminAuthenticated, async (req, res) => {
     try {
         const videoId = req.params.id; // Get the video ID from the URL
 
@@ -2102,24 +2113,24 @@ website.post('/delete-video/:id', isAdminAuthenticated , async (req, res) => {
 website.get('/login', (req, res) => {
     res.redirect('/auth/login');
 });
- 
+
 website.get('/auth/register', (req, res) => {
     res.render('auth/register', { errorMessage: null });
 });
-website.post('/auth/register', async(req,res)=>{
-    const {name,email,password}= req.body;
-    const user = await userModel.findOne({email});
-    if(user){
+website.post('/auth/register', async (req, res) => {
+    const { name, email, password } = req.body;
+    const user = await userModel.findOne({ email });
+    if (user) {
         res.send('already exist');
     }
-    const hashedPassword = await bcrypt.hash(password,10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     const newuser = await userModel.create({
         name,
         email,
-        password:hashedPassword
+        password: hashedPassword
     })
-    const token = jwt.sign({email},'secret');
-    res.cookie('token',token);
+    const token = jwt.sign({ email }, 'secret');
+    res.cookie('token', token);
     res.redirect('/auth/login');
 })
 
@@ -2135,7 +2146,7 @@ website.post('/auth/login', async (req, res) => {
 
         // Validate input
         if (!email || !password) {
-            return ( {
+            return ({
                 errorMessage: 'Please provide both email and password'
             });
         }
@@ -2146,15 +2157,15 @@ website.post('/auth/login', async (req, res) => {
         // console.log(user, "Hello");
 
         if (!user) {
-            return ( {
+            return ({
                 errorMessage: 'Invalid credentials'
             });
         }
-      const isMatch = bcrypt.compare(password,user.password);
-      if(isMatch){
-        res.redirect('/profile');
-      }
-        if(user.password != password){
+        const isMatch = bcrypt.compare(password, user.password);
+        if (isMatch) {
+            res.redirect('/profile');
+        }
+        if (user.password != password) {
             return res.send(`<script>
                     alert('Invalid credentials');
                     window.location.href = '/auth/login';
@@ -2170,7 +2181,7 @@ website.post('/auth/login', async (req, res) => {
 
     } catch (err) {
         console.error('Login error:', err);
-        return ( {
+        return ({
             errorMessage: 'An error occurred. Please try again.'
         });
     }
@@ -2261,17 +2272,17 @@ website.get('/paymentgateway_index', (req, res) => {
 
 website.post('/create-order', async (req, res) => {
     try {
-        
+
         const { amount, course, name, email, phone } = req.body;
-        
+
         const options = {
-            amount: amount  * 100, // Convert to paise
+            amount: amount * 100, // Convert to paise
             currency: 'INR',
             receipt: 'order_' + Math.random().toString(36).substr(2, 9)
         };
 
         const order = await razorpay.orders.create(options);
-        
+
         // Create a temporary payment record
         const payment = new Payment({
             name,
@@ -2300,7 +2311,7 @@ website.get('/payment-success', async (req, res) => {
         const { payment_id, order_id } = req.query;
         // Update payment record
         console.log(req.query)
-        const payment = await Payment.findOneAndUpdate({razorpay_order_id : order_id}, {
+        const payment = await Payment.findOneAndUpdate({ razorpay_order_id: order_id }, {
             razorpay_payment_id: payment_id,
             status: 'completed'
         }, { new: true });
@@ -2328,10 +2339,10 @@ website.get('/payment-success', async (req, res) => {
 //  Payment Detailes display in the Back-end
 
 
-website.get('/paymentShow', isAdminAuthenticated , async (req, res) => {
+website.get('/paymentShow', isAdminAuthenticated, async (req, res) => {
     try {
         const payments = await Payment.find().sort({ createdAt: -1 });
-        res.render('panel/paymentDetailesAd.ejs', { 
+        res.render('panel/paymentDetailesAd.ejs', {
             paymentDetails: payments // Match this with EJS
         });
     } catch (error) {

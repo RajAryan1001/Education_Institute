@@ -2265,7 +2265,7 @@ website.post('/create-order', async (req, res) => {
         const { amount, course, name, email, phone } = req.body;
         
         const options = {
-            amount: 10000 * 100, // Convert to paise
+            amount: amount  * 100, // Convert to paise
             currency: 'INR',
             receipt: 'order_' + Math.random().toString(36).substr(2, 9)
         };

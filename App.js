@@ -45,7 +45,7 @@ website.use(cookieParser());
 
 const MongoStore = require('connect-mongo');
 
-// // Session configuration
+ // Session configuration
 website.use(session({
     secret: process.env.SESSION_SECRET || 'session-secret-key',
     resave: false,  // Important: should be false

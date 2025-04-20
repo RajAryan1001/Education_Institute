@@ -26,7 +26,7 @@ website.set('view engine', 'ejs');
 
 
 // Set the views folder path
-website.set('views', path.join(__dirname, 'views'));
+website.set('views', path.join(__dirname, 'views', 'partials', 'Header.ejs'));
 
 // Static files middleware
 website.use(express.static('public'));
@@ -35,9 +35,6 @@ website.use(express.static('public'));
 website.use(express.json()); // Parse JSON bodies
 website.use(express.urlencoded({ extended: true })); // Parse URL-encoded form data
 website.use(cookieParser());
-
-
-
 
 
 

@@ -26,7 +26,7 @@ website.set('view engine', 'ejs');
 
 
 // Set the views folder path
-website.set('views', path.join(__dirname, 'views', 'partials', 'Header.ejs'));
+website.set('views', path.join(__dirname, 'views'));
 
 // Static files middleware
 website.use(express.static('public'));
@@ -54,6 +54,7 @@ website.use(session({
         autoRemove: 'interval',
         autoRemoveInterval: 60, // Remove expired sessions every 60 minutes
         touchAfter: 24 * 3600 // Time period in seconds
+        
     }),
     cookie: {
         secure: false, // Set to false in development, true in production

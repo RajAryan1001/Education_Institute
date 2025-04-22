@@ -4,4 +4,6 @@ mongoose.connect('mongodb+srv://Raj:Rajaryan@cluster0.crfzpz6.mongodb.net/educat
     console.log('connected');
 }).catch((err)=>{
     console.log(err);
-})
+});
+
+// test
